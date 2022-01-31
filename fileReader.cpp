@@ -1,5 +1,4 @@
-// the following file will include functions for reading the data from the file to create the packet
-// as well as saving file information after it is received from the other client
+
 
 
 #include <iostream>
@@ -13,14 +12,24 @@ using namespace std;
 
 
 // constructor
-
-FileReader::FileReader(char* fileName, char* fileType)
+// file type is either binary or ASCII
+FileReader::FileReader(string fileName, string fileType)
 {
 
 }
 
 
-int FileReader::CreatePackets()
+
+
+
+// creates metadata or content packets
+Packet FileReader::CreatePackets()
 {
-	return 0;
+	
+	Packet newPacket;
+
+	newPacket.packetType = 'M';
+	newPacket.fileNamePacket = this->fileName;
+	
+	return newPacket;
 }
