@@ -5,12 +5,22 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "fileReader.h"
 
 using namespace std;
 
-class fileReader
+
+
+
+// constructor
+
+FileReader::FileReader(char* fileName, char* fileType)
 {
 
+}
 
 
-};
+int FileReader::CreatePackets()
+{
+	return 0;
+}

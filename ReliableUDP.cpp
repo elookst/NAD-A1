@@ -14,6 +14,9 @@
 //#define SHOW_ACKS
 #pragma warning (disable:4996)
 
+// prototypes
+int checkArgs(int, char*[]);
+
 using namespace std;
 using namespace net;
 
@@ -118,14 +121,55 @@ private:
 // ----------------------------------------------
 
 
+// call to command line argument parsing function
+// should parse Client/Server, ip address to send to, and the filename
+// NOTE maybe switch for text or binary file?? (-t or -b)
+// 0 if success, other values will be errors
+int checkArgs(int numArgs, char* args[])
+{
+	
+	int result = 0;
+	// check that server was specified
+	// default if starting program is to be a server if no other args
+	if (numArgs == 1)
+	{
+		
+	}
+	// check that client with ip address and filename was specified
+	// maybe default file type is binary?
+	else if (numArgs == 4)
+	{
+		
+	}
+	// check that client, ip, filename, and filetype is in arguments
+	else if (numArgs == 5)
+	{
+
+	}
+	// invalid arguments given
+	// display error and exit
+	else
+	{
+		
+		// display usage and error
+
+		result = -1;
+	}
+
+
+	return result;
+	
+}
 
 int main(int argc, char* argv[])
 {
-	// Include section to parse the command line arguments
-	// the arguments need to be client or server
-	// the ip address must be included and be valid
-	// the file name must also be included and be valid/readable
-	// utilize string comparison methods and ensure valid error messages are displayed with error codes
+	
+	
+
+	int result = checkArgs(argc, argv);
+	// result value 0 is OK
+	// any other value may mean invalid args and will exit
+	
 
 	enum Mode
 	{
@@ -133,13 +177,20 @@ int main(int argc, char* argv[])
 		Server
 	};
 
+
+	// assign mode and address based on result from checkArgs only
+
 	Mode mode = Server;
 	Address address;
 
+
+	// remove this, arguments will be parsed by checkArgs function
 	if (argc >= 2)
 	{
 		int a, b, c, d;
 		#pragma warning(suppress : 4996)
+
+		// this is checking for a valid ip address given
 		if (sscanf(argv[1], "%d.%d.%d.%d", &a, &b, &c, &d))
 		{
 			mode = Client;
