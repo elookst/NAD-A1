@@ -10,12 +10,12 @@
 #include <vector>
 
 #include "Net.h"
+#include "fileReader.h"
 
 //#define SHOW_ACKS
-#pragma warning (disable:4996)
 
 // prototypes
-int checkArgs(int, char*[]);
+int checkArgs(int, char* []);
 
 using namespace std;
 using namespace net;
@@ -127,19 +127,19 @@ private:
 // 0 if success, other values will be errors
 int checkArgs(int numArgs, char* args[])
 {
-	
+
 	int result = 0;
 	// check that server was specified
 	// default if starting program is to be a server if no other args
 	if (numArgs == 1)
 	{
-		
+
 	}
 	// check that client with ip address and filename was specified
 	// maybe default file type is binary?
 	else if (numArgs == 4)
 	{
-		
+
 	}
 	// check that client, ip, filename, and filetype is in arguments
 	else if (numArgs == 5)
@@ -150,7 +150,7 @@ int checkArgs(int numArgs, char* args[])
 	// display error and exit
 	else
 	{
-		
+
 		// display usage and error
 
 		result = -1;
@@ -158,18 +158,17 @@ int checkArgs(int numArgs, char* args[])
 
 
 	return result;
-	
+
 }
 
 int main(int argc, char* argv[])
 {
-	
-	
+	FileReader fr = FileReader("C:/tmp/error.jpg", "-b");
 
 	int result = checkArgs(argc, argv);
 	// result value 0 is OK
 	// any other value may mean invalid args and will exit
-	
+
 
 	enum Mode
 	{
@@ -188,7 +187,7 @@ int main(int argc, char* argv[])
 	if (argc >= 2)
 	{
 		int a, b, c, d;
-		#pragma warning(suppress : 4996)
+#pragma warning(suppress : 4996)
 
 		// this is checking for a valid ip address given
 		if (sscanf(argv[1], "%d.%d.%d.%d", &a, &b, &c, &d))
@@ -264,6 +263,8 @@ int main(int argc, char* argv[])
 		// utilize fread or fgets as necessary until all contents are read
 		// client may also need to reference fileReader.cpp (may convert to .h file)
 
+		cout << "\n\nMD5 HASH\n\n" + fr.MD5hash;
+
 
 		// send and receive packets
 		int counter = 0;
@@ -272,19 +273,17 @@ int main(int argc, char* argv[])
 		// client send loop
 		while (sendAccumulator > 1.0f / sendRate)
 		{
-			char count = (char) counter++;
-			
+			char count = (char)counter++;
+
 			// call method to construct the packet contents
 			// include protocol D for file data, M for file metadata
 			// include protocol headers for file size, author etc. <fs><a> for contents to be parsed
 			// call on fileValidation to generate hash 
 			// track number of packets to send within the packet (e.g. [3][12] would mean packet 3 of 12)
 
-
 			unsigned char packet[PacketSize];
-			memset(packet, 0, sizeof(packet)); 
+			memset(packet, 0, sizeof(packet));
 
-			strcpy((char*)packet, "Hello World <<"); // remove this
 			connection.SendPacket(packet, sizeof(packet));
 			// iterate through the group of packets after ack
 
