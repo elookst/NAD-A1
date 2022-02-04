@@ -163,7 +163,7 @@ int checkArgs(int numArgs, char* args[])
 
 int main(int argc, char* argv[])
 {
-	FileReader fr = FileReader("C:/tmp/error.jpg", "-b");
+	FileReader fr = FileReader("C:/tmp/sample.txt", "-t");
 
 	int result = checkArgs(argc, argv);
 	// result value 0 is OK
@@ -263,7 +263,7 @@ int main(int argc, char* argv[])
 		// utilize fread or fgets as necessary until all contents are read
 		// client may also need to reference fileReader.cpp (may convert to .h file)
 
-		cout << "\n\nMD5 HASH\n\n" + fr.MD5hash;
+		cout << "\n TESTING";
 
 
 		// send and receive packets
@@ -358,9 +358,9 @@ int main(int argc, char* argv[])
 		}
 
 		net::wait(DeltaTime);
-	}
+		}
 
 	ShutdownSockets();
 
 	return 0;
-}
+	}

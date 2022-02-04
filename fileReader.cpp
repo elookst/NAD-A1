@@ -30,13 +30,14 @@ FileReader::FileReader(string fileName, string fileType)
 
 
 // creates metadata or content packets
-Packet FileReader::CreatePacket(char type, char data[])
+Packet FileReader::CreatePacket(char type, int packetNum, char data[], int maxPacketNum)
 {
-
 	Packet newPacket;
 
 	newPacket.packetType = type;
-	newPacket.fileNamePacket = this->FileName;
+	newPacket.packetNumber = packetNum;
+	newPacket.maxPacketNumber = maxPacketNum;
+	strcpy(newPacket.data, data);
 
 	return newPacket;
 }
@@ -46,7 +47,7 @@ void FileReader::Read()
 	if (FileType == "-t")
 	{
 		// read file contents char by char and store it in AllFileData
-		std::ifstream file(FileName);
+		ifstream file(FileName);
 		char ch;
 		if (file.is_open())
 		{
@@ -117,11 +118,39 @@ void FileReader::SplitFileIntoPackets()
 
 		// figure out how many packets will be needed based on the size of the data in the file
 		// divide the length of the data by the DATA_BUFFER
+		int textDataLength = AllTextFileData.length();
+		int totalPacketsRequired = (textDataLength / DATA_BUFFER) + 1; // +1 becuase it doesn't divide evenly
 
-		int totalPacketsRequired = AllTextFileData.length() / DATA_BUFFER;
+		if (packetCounter == 0)
+		{
+			// construct the metadata packet. This will be handled separately since it's of a differnet structure than 
+			// the Packet Struct
 
+			packetCounter++;
+		}
 
+		// iterate over the file data, incrementing i by 246 each time
+		for (int i = 0; i < AllTextFileData.length(); i += DATA_BUFFER)
+		{
+			// grab the substring from i to i + 246 and store in a substring
+			// this will be the data for the individual packet
+			string substring = AllTextFileData.substr(i, DATA_BUFFER);
 
+			// convert string to char array
+			char data[DATA_BUFFER + NULL_CHAR] = { 0 }; // +1 to account for the null terminator from c_str()
+			strcpy(data, substring.c_str());
+
+			// create the packet and add to the packet list
+			Packet newPacket = CreatePacket(PACKET_TYPE_DATA, packetCounter, data, totalPacketsRequired);
+			packetList.push_back(newPacket);
+
+			packetCounter++;
+
+			if (packetCounter > totalPacketsRequired)
+			{
+				break;
+			}
+		}
 	}
 	else if (FileType == "-b")
 	{
