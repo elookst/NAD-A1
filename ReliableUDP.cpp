@@ -4,6 +4,15 @@
 	Author: Glenn Fiedler <gaffer@gaffer.org>
 */
 
+
+/*
+	TO DO:
+	 - cmd args
+	 - get file name from cmd args
+	 - transfer binary data
+	 - construct and send metadata packet
+*/
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -27,6 +36,11 @@ const float DeltaTime = 1.0f / 30.0f;
 const float SendRate = 1.0f / 30.0f;
 const float TimeOut = 10.0f;
 const int PacketSize = 256;
+
+const char packetNumIndicator[5] = "<PN>";
+const char maxPacketNumIndicator[5] = "<MP>";
+const char packetTypeIndicator[5] = "<PT>";
+const char dataIndicator[5] = "<DT>";
 
 class FlowControl
 {
@@ -164,8 +178,14 @@ int checkArgs(int numArgs, char* args[])
 int main(int argc, char* argv[])
 {
 	FileReader fr = FileReader("C:/tmp/sample.txt", "-t");
+	list<Packet> packetsToSend = fr.packetList;
+	list<Packet>::iterator packetIter = packetsToSend.begin();
+
 
 	int result = checkArgs(argc, argv);
+
+	// make sure to validate fileSize so that the int values for packet numbers aren't more than 7 digits!
+
 	// result value 0 is OK
 	// any other value may mean invalid args and will exit
 
@@ -263,8 +283,6 @@ int main(int argc, char* argv[])
 		// utilize fread or fgets as necessary until all contents are read
 		// client may also need to reference fileReader.cpp (may convert to .h file)
 
-		cout << "\n TESTING";
-
 
 		// send and receive packets
 		int counter = 0;
@@ -273,16 +291,55 @@ int main(int argc, char* argv[])
 		// client send loop
 		while (sendAccumulator > 1.0f / sendRate)
 		{
-			char count = (char)counter++;
-
-			// call method to construct the packet contents
-			// include protocol D for file data, M for file metadata
-			// include protocol headers for file size, author etc. <fs><a> for contents to be parsed
-			// call on fileValidation to generate hash 
-			// track number of packets to send within the packet (e.g. [3][12] would mean packet 3 of 12)
 
 			unsigned char packet[PacketSize];
 			memset(packet, 0, sizeof(packet));
+
+			// packet construction (using an incremented pointer to fill it):
+			unsigned char* ptr = packet;
+
+			// check if the packer iterator is at the end. If so, we want to stop.
+			if (packetIter == packetsToSend.end())
+			{
+				break;
+			}
+
+			// add packet number
+			memcpy(ptr, packetNumIndicator, 4);
+			ptr += 4;
+
+			itoa(packetIter->packetNumber, (char*)ptr, 10);
+			ptr += 8;
+
+			// add packet type
+			memcpy(ptr, packetTypeIndicator, 4);
+			ptr += 4;
+
+			*ptr = packetIter->packetType;
+			ptr++;
+
+			// add max packet number
+			memcpy(ptr, maxPacketNumIndicator, 4);
+			ptr += 4;
+
+			itoa(packetIter->maxPacketNumber, (char*)ptr, 10);
+			ptr += 8;
+
+			// add the rest of the data
+			memcpy(ptr, dataIndicator, 4);
+			ptr += 4;
+
+			int dataSize = strlen(packetIter->data);
+			for (int i = 0; i < dataSize; i++)
+			{
+				*ptr = packetIter->data[i];
+				ptr++;
+			}
+
+
+			// we;re done with this packet, so we increment the packet iterator to the next
+			// packet in the packetList
+			packetIter++;
 
 			connection.SendPacket(packet, sizeof(packet));
 			// iterate through the group of packets after ack
@@ -307,7 +364,7 @@ int main(int argc, char* argv[])
 
 			if (bytes_read != 0)
 			{
-				printf("Recieved Packet: %s", packet);
+
 			}
 			if (bytes_read == 0)
 				break;
@@ -358,9 +415,9 @@ int main(int argc, char* argv[])
 		}
 
 		net::wait(DeltaTime);
-		}
+	}
 
 	ShutdownSockets();
 
 	return 0;
-	}
+}

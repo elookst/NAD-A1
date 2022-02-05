@@ -129,10 +129,10 @@ void FileReader::SplitFileIntoPackets()
 			packetCounter++;
 		}
 
-		// iterate over the file data, incrementing i by 246 each time
-		for (int i = 0; i < AllTextFileData.length(); i += DATA_BUFFER)
+		// iterate over the file data, incrementing i by DATA_BUFFER each time
+		for (int i = 0; i < textDataLength; i += DATA_BUFFER)
 		{
-			// grab the substring from i to i + 246 and store in a substring
+			// grab the substring from i to i + DATA_BUFFER and store in a substring
 			// this will be the data for the individual packet
 			string substring = AllTextFileData.substr(i, DATA_BUFFER);
 
@@ -154,9 +154,33 @@ void FileReader::SplitFileIntoPackets()
 	}
 	else if (FileType == "-b")
 	{
-
+		int binaryDataLength = AllBinaryData.size();
 		int totalPacketsRequired = AllBinaryData.size() / DATA_BUFFER;
+		int counter = 0; // used to iterate over the binary data
 
+		vector<char[DATA_BUFFER]> binaryDataChunks;
 
+		for (int i = 0; i < totalPacketsRequired; i++)
+		{
+			char tmp[DATA_BUFFER];
+
+			for (int j = 0; j < DATA_BUFFER; j++)
+			{
+				tmp[j] = AllBinaryData[counter];
+				counter++;
+			}
+
+			binaryDataChunks.push_back(tmp);
+		}
+
+		vector<char[DATA_BUFFER]>::iterator iter = binaryDataChunks.begin();
+
+		for (iter; iter != binaryDataChunks.end(); iter++)
+		{
+			Packet newPacket = CreatePacket(PACKET_TYPE_DATA, packetCounter, *iter, totalPacketsRequired);
+			packetList.push_back(newPacket);
+
+			packetCounter++;
+		}
 	}
 }
