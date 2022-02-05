@@ -24,6 +24,9 @@
     <ClInclude Include="md5.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="fileCreator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="fileReader.cpp">
@@ -33,6 +36,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="md5.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fileCreator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

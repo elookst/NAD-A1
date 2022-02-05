@@ -140,11 +140,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="fileCreator.h" />
     <ClInclude Include="fileReader.h" />
     <ClInclude Include="md5.h" />
     <ClInclude Include="Net.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="fileCreator.cpp" />
     <ClCompile Include="fileReader.cpp" />
     <ClCompile Include="md5.cpp" />
     <ClCompile Include="ReliableUDP.cpp" />

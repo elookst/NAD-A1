@@ -20,6 +20,7 @@
 
 #include "Net.h"
 #include "fileReader.h"
+#include "fileCreator.h"
 
 //#define SHOW_ACKS
 
@@ -348,6 +349,10 @@ int main(int argc, char* argv[])
 		}
 
 
+
+		// placeholder for now
+		
+		FileCreator fc = FileCreator("<pN>1<MP>maxNum<DT>rest of data including filename");
 		// server receiving info here
 		while (true)
 		{
