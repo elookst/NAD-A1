@@ -17,6 +17,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include "Net.h"
 #include "fileReader.h"
@@ -29,6 +30,7 @@ int checkArgs(int, char* []);
 
 using namespace std;
 using namespace net;
+using namespace std::chrono;
 
 const int ServerPort = 30000;
 const int ClientPort = 30001;
@@ -191,6 +193,11 @@ int main(int argc, char* argv[])
 	// any other value may mean invalid args and will exit
 
 
+	// include whole file error detection test here
+	// use a sample text and binary file and generate their hashes by the FileReader class and FileCreator class?
+	// compare both starting files and ending files?
+
+
 	enum Mode
 	{
 		Client,
@@ -277,17 +284,14 @@ int main(int argc, char* argv[])
 			break;
 		}
 
-		// at this point, client should be connected to server
-		// this is when to retrieve the file data from disk
-		// attempt to open and close file for reading
-		// error check at each stage of open/read
-		// utilize fread or fgets as necessary until all contents are read
-		// client may also need to reference fileReader.cpp (may convert to .h file)
-
 
 		// send and receive packets
 		int counter = 0;
 		sendAccumulator += DeltaTime;
+
+		// used to calculate transmission time
+		// gets a start time
+		auto startTime = high_resolution_clock::now();
 
 		// client send loop
 		while (sendAccumulator > 1.0f / sendRate)
@@ -398,12 +402,22 @@ int main(int argc, char* argv[])
 				break;
 		}
 
+		// gets stop time from transfer
+		auto stopTime = high_resolution_clock::now();
+
+		auto duration = duration_cast<seconds>(stopTime - startTime);
+
+		// calculate megabits per second for file transfer using file size / duration
+		// display on main page
+
 
 		// call methods within FileCreator class to validate the file and hash made
 		fc.VerifyHash();
 
 		// close the file created
 		fc.Close();
+
+		// display the duration
 
 
 
