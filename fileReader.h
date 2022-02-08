@@ -9,6 +9,8 @@
 
 using namespace std;
 
+#pragma warning(disable:4996)
+
 const int DATA_BUFFER = 218; // max number of bytes without protocol headers that can be stored into a data packet + delimiters
 const int METADATA_BUFFER = 231;
 const char PACKET_TYPE_DATA = 'D';

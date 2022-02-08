@@ -349,33 +349,44 @@ int main(int argc, char* argv[])
 		}
 
 
-
-		// placeholder for now
 		
-		FileCreator fc = FileCreator("<pN>1<MP>maxNum<DT>rest of data including filename");
+		// will be used to write to the file
+		FileCreator fc = FileCreator();
+
+
 		// server receiving info here
 		while (true)
 		{
 			unsigned char packet[256];
 			int bytes_read = connection.ReceivePacket(packet, sizeof(packet));
 
-			// include function for parsing the packet
-			// parsing should discern if the packet included file contents (D) or metadata (M)
-			// metadata broken up into pieces by their header tags (<fs> for file size etc.)
-			// string functions as necessary
-
-			// generate hash at the end of file indicator
-
-
+			
 			if (bytes_read != 0)
 			{
+				// check if metadata packet
+				// update the file creator with metadata packet information
+				if (packet[1] == 'M')
+				{
+					// set filetype to text for now, would extract from packet
+					// Sample packet: [packetNum][M][t or b][size][hash - 16][filename]
+					fc.SetFileType("-t"); // packet[2]
+					
+					
+					//fc.SetFileSize();
 
+				}
+				// data packet received
+				// parse data and write it to the file
+				else
+				{
+
+				}
 			}
+
 			if (bytes_read == 0)
 				break;
 		}
 
-		// at end of packets sent, call on fileValidation and fileReader to verify the hashes and write the file data to the disk
 
 		// show packets that were acked this frame
 

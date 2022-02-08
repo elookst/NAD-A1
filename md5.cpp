@@ -43,6 +43,8 @@ documentation and/or software.
 #include <cstdio>
 #include <iostream>
 
+#pragma warning(disable:4996)
+
 // Constants for MD5Transform routine.
 #define S11 7
 #define S12 12

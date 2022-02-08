@@ -16,6 +16,8 @@
 
 using namespace std;
 
+#pragma warning(disable:4996)
+
 // CLASS	:	FileCreator
 // PURPOSE	:	This class is used to create and write to a new file that is received from many packets.
 //				Attributes include
@@ -27,14 +29,31 @@ private:
 
 	string fileName; // file to write packet contents to
 	string fileType; // text or binary file
+	int fileSize; // file size
 	FILE* fp; // will confirm if needed, will use to write to file
 	string recievedHash; // MD5 hash received from the metadata packet, used to compare
+	
 
 public:
 
+	// default constructor
+	// leaves everything blank
+	FileCreator();
+
+	string GetFileName(void);
+
+	void SetFileSize(int filesize);
+
+	int GetFileSize(void);
 	
-	// creates the file if it does not exist
-	FileCreator(const char metaDataPacket[]);
+	void SetFileName(const char* filename);
+
+	void SetFileType(const char* fileType);
+
+	void SetFilePtr();
+
+	void SetReceivedHash(char* hash);
+	
 
 	// get file data from the data packets
 	// track the packet number achieved or look for EOF indicator

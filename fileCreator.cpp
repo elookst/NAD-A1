@@ -12,18 +12,77 @@
 
 using namespace std;
 
+#pragma warning(disable:4996)
 
-// sets the fileName and fileType attributes for creating the file
-FileCreator::FileCreator(const char metadataPacket[])
+// sets blank filename etc.
+FileCreator::FileCreator()
 {
-		
+	this->fileName = "";
 	this->fileType = "-t";
 	this->recievedHash = "";
-	this->fileName = "";
-	// copy 16 bytes of metadata packet to receivedHash
-	
-
+	this->fp = NULL;
+	this->fileSize = 0;
 }
+
+
+void FileCreator::SetFileSize(int size)
+{
+	this->fileSize = size;
+}
+
+int FileCreator::GetFileSize(void)
+{
+	return this->fileSize;
+}
+
+
+string FileCreator::GetFileName(void)
+{
+	return this->fileName;
+}
+
+// need to test this
+void FileCreator::SetFileName(const char* filename)
+{
+	this->fileName = string(filename);
+}
+
+// need to test
+void FileCreator::SetFileType(const char* fileType)
+{
+	this->fileType = string(fileType);
+}
+
+void FileCreator::SetFilePtr()
+{
+	if (this->fileName != "")
+	{
+		
+		// opens file as text
+		// filename needed to be converted from string to c-style string to open
+		if (this->fileType == "-t")
+		{
+			this->fp = fopen(GetFileName().c_str(), "w");
+		}
+		else
+		{
+			this->fp = fopen(GetFileName().c_str(), "wb");
+		}
+
+		if (this->fp == NULL)
+		{
+			cout << "File open error"; // error occured
+		}
+		
+		
+	}
+}
+
+void FileCreator::SetReceivedHash(char* hash)
+{
+	this->recievedHash = hash;
+}
+
 
 // break down packet into elements
 // 
