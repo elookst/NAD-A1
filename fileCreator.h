@@ -13,6 +13,11 @@
 #include <list>
 #include <vector>
 
+#define FILE_TYPE_INDEX 2
+#define FILE_SIZE_BYTE_MAX 8
+#define FILE_SIZE_INDEX 3
+#define HASH_INDEX 11
+#define HASH_LENGTH 16
 
 using namespace std;
 
@@ -30,9 +35,10 @@ private:
 	string fileName; // file to write packet contents to
 	string fileType; // text or binary file
 	int fileSize; // file size
-	FILE* fp; // will confirm if needed, will use to write to file
+	ofstream fp; // will confirm if needed, will use to write to file
 	string recievedHash; // MD5 hash received from the metadata packet, used to compare
-	
+	int currentPacketNumber; // to track packets received
+	int maxPacketNumber; // ensures all packets received
 
 public:
 
@@ -45,22 +51,34 @@ public:
 	void SetFileSize(int filesize);
 
 	int GetFileSize(void);
-	
-	void SetFileName(const char* filename);
+
+	void SetCurrentPacketNumber(int packetNumber);
+
+	int GetCurrentPacketNumber(void);
+
+	void SetMaxPacketNumber(int packetNumber);
+
+	int GetMaxPacketNumber(void);
+
+	void SetFileName(string filename);
 
 	void SetFileType(const char* fileType);
 
 	void SetFilePtr();
 
-	void SetReceivedHash(char* hash);
+	void SetReceivedHash(string hash);
 	
 
 	// get file data from the data packets
 	// track the packet number achieved or look for EOF indicator
-	int ParsePacketData(char* packetData);
+	int ParseMetadataPacket(unsigned char* packetData);
 	
 	// write to file opened
-	int AppendToFile(char* packetData);
+	// updates current packet number until max packet number reached
+	int AppendToFile(unsigned char* packetData);
+
+
+	int Close(void);
 
 
 	int VerifyHash(void);

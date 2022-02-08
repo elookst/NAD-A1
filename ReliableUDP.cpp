@@ -360,6 +360,7 @@ int main(int argc, char* argv[])
 			unsigned char packet[256];
 			int bytes_read = connection.ReceivePacket(packet, sizeof(packet));
 
+			int doneTransfer = 0;
 			
 			if (bytes_read != 0)
 			{
@@ -367,25 +368,43 @@ int main(int argc, char* argv[])
 				// update the file creator with metadata packet information
 				if (packet[1] == 'M')
 				{
-					// set filetype to text for now, would extract from packet
-					// Sample packet: [packetNum][M][t or b][size][hash - 16][filename]
-					fc.SetFileType("-t"); // packet[2]
+					
+					// Sample metadata packet: [packetNum][M][t or b][size][hash - 16][filename] ?
+					// this function will store all the metadata for later
+					// sets filename etc.
+					fc.ParseMetadataPacket(packet);
+
+
 					
 					
-					//fc.SetFileSize();
 
 				}
 				// data packet received
 				// parse data and write it to the file
 				else
 				{
+					// Sample packet: [packetNum][D][maxPacketNumber][data]
+					// set doneTransfer to 1 if current packet number == last packet
 
+					doneTransfer = fc.AppendToFile(packet);
+					if (doneTransfer != 0)
+					{
+						break;
+					}
 				}
 			}
 
 			if (bytes_read == 0)
 				break;
 		}
+
+
+		// call methods within FileCreator class to validate the file and hash made
+		fc.VerifyHash();
+
+		// close the file created
+		fc.Close();
+
 
 
 		// show packets that were acked this frame
