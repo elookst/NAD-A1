@@ -10,7 +10,7 @@
 using namespace std;
 
 const int DATA_BUFFER = 218; // max number of bytes without protocol headers that can be stored into a data packet + delimiters
-const int METADATA_BUFFER = 231;
+const int METADATA_BUFFER = 221;
 const char PACKET_TYPE_DATA = 'D';
 const char PACKET_TYPE_METADATA = 'M';
 const int NULL_CHAR = 1;
