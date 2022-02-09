@@ -6,6 +6,7 @@
 
 using namespace std;
 
+#pragma warning(disable:4996)
 
 // constructor
 // file type is either binary or ASCII

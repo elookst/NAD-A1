@@ -17,9 +17,11 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include "Net.h"
 #include "fileReader.h"
+#include "fileCreator.h"
 
 //#define SHOW_ACKS
 
@@ -28,6 +30,7 @@ int checkArgs(int, char* []);
 
 using namespace std;
 using namespace net;
+using namespace std::chrono;
 
 const int ServerPort = 30000;
 const int ClientPort = 30001;
@@ -190,6 +193,11 @@ int main(int argc, char* argv[])
 	// any other value may mean invalid args and will exit
 
 
+	// include whole file error detection test here
+	// use a sample text and binary file and generate their hashes by the FileReader class and FileCreator class?
+	// compare both starting files and ending files?
+
+
 	enum Mode
 	{
 		Client,
@@ -276,17 +284,14 @@ int main(int argc, char* argv[])
 			break;
 		}
 
-		// at this point, client should be connected to server
-		// this is when to retrieve the file data from disk
-		// attempt to open and close file for reading
-		// error check at each stage of open/read
-		// utilize fread or fgets as necessary until all contents are read
-		// client may also need to reference fileReader.cpp (may convert to .h file)
-
 
 		// send and receive packets
 		int counter = 0;
 		sendAccumulator += DeltaTime;
+
+		// used to calculate transmission time
+		// gets a start time
+		auto startTime = high_resolution_clock::now();
 
 		// client send loop
 		while (sendAccumulator > 1.0f / sendRate)
@@ -348,29 +353,73 @@ int main(int argc, char* argv[])
 		}
 
 
+		
+		// will be used to write to the file
+		FileCreator fc = FileCreator();
+
+
 		// server receiving info here
 		while (true)
 		{
 			unsigned char packet[256];
 			int bytes_read = connection.ReceivePacket(packet, sizeof(packet));
 
-			// include function for parsing the packet
-			// parsing should discern if the packet included file contents (D) or metadata (M)
-			// metadata broken up into pieces by their header tags (<fs> for file size etc.)
-			// string functions as necessary
-
-			// generate hash at the end of file indicator
-
-
+			int doneTransfer = 0;
+			
 			if (bytes_read != 0)
 			{
+				// check if metadata packet
+				// update the file creator with metadata packet information
+				if (packet[1] == 'M')
+				{
+					
+					// Sample metadata packet: [packetNum][M][t or b][size][hash - 16][filename] ?
+					// this function will store all the metadata for later
+					// sets filename etc.
+					fc.ParseMetadataPacket(packet);
 
+
+					
+					
+
+				}
+				// data packet received
+				// parse data and write it to the file
+				else
+				{
+					// Sample packet: [packetNum][D][maxPacketNumber][data]
+					// set doneTransfer to 1 if current packet number == last packet
+
+					doneTransfer = fc.AppendToFile(packet);
+					if (doneTransfer != 0)
+					{
+						break;
+					}
+				}
 			}
+
 			if (bytes_read == 0)
 				break;
 		}
 
-		// at end of packets sent, call on fileValidation and fileReader to verify the hashes and write the file data to the disk
+		// gets stop time from transfer
+		auto stopTime = high_resolution_clock::now();
+
+		auto duration = duration_cast<seconds>(stopTime - startTime);
+
+		// calculate megabits per second for file transfer using file size / duration
+		// display on main page
+
+
+		// call methods within FileCreator class to validate the file and hash made
+		fc.VerifyHash();
+
+		// close the file created
+		fc.Close();
+
+		// display the duration
+
+
 
 		// show packets that were acked this frame
 
