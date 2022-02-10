@@ -180,7 +180,6 @@ int main(int argc, char* argv[])
 	list<Packet>::iterator packetIter = packetsToSend.begin();
 	MetaDataPacket mdPacket = fr.metadataPacket;
 	bool MetaDataPacketSent = false;
-	FileCreator fc = FileCreator();
 
 
 	int result = checkArgs(argc, argv);
@@ -438,7 +437,8 @@ int main(int argc, char* argv[])
 
 
 
-
+		// will be used to write to the file
+		FileCreator fc = FileCreator();
 
 
 		// server receiving info here
@@ -453,7 +453,7 @@ int main(int argc, char* argv[])
 			{
 				//// check if metadata packet
 				//// update the file creator with metadata packet information
-				if (packet[0] == 'M')
+				if (packet[1] == 'M')
 				{
 
 					// Sample metadata packet: [packetNum][M][t or b][size][hash - 16][filename] ?
@@ -489,6 +489,17 @@ int main(int argc, char* argv[])
 		auto stopTime = high_resolution_clock::now();
 
 		auto duration = duration_cast<seconds>(stopTime - startTime);
+
+		// calculate megabits per second for file transfer using file size / duration
+		// display on main page
+
+
+		// call methods within FileCreator class to validate the file and hash made
+		fc.VerifyHash();
+
+		// close the file created
+		fc.Close();
+
 		// display the duration
 
 
@@ -537,12 +548,6 @@ int main(int argc, char* argv[])
 
 		net::wait(DeltaTime);
 			}
-
-	// call methods within FileCreator class to validate the file and hash made
-	fc.VerifyHash();
-
-	// close the file created
-	fc.Close();
 
 	ShutdownSockets();
 
