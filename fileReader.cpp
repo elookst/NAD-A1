@@ -174,7 +174,7 @@ void FileReader::SplitFileIntoPackets()
 
 		for (int i = 0; i < totalPacketsRequired; i++)
 		{
-			char tmp[DATA_BUFFER] = { 0 };
+			char tmp[DATA_BUFFER + NULL_CHAR] = { 0 };
 
 			for (int j = 0; j < DATA_BUFFER; j++)
 			{
