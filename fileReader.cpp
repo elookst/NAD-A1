@@ -25,6 +25,7 @@ FileReader::FileReader(string fileName, string fileType)
 	SetMD5hash();
 
 	// split the file into packets and construct a packet list, ordered by packet number
+	// this includes metadata construction
 	SplitFileIntoPackets();
 
 }
@@ -127,6 +128,8 @@ void FileReader::SplitFileIntoPackets()
 			// construct the metadata packet. This will be handled separately since it's of a differnet structure than 
 			// the Packet Struct
 
+			CreateMetadataPacket(totalPacketsRequired, 't');
+
 			packetCounter++;
 		}
 
@@ -159,29 +162,46 @@ void FileReader::SplitFileIntoPackets()
 		int totalPacketsRequired = AllBinaryData.size() / DATA_BUFFER;
 		int counter = 0; // used to iterate over the binary data
 
-		vector<char[DATA_BUFFER]> binaryDataChunks;
+		if (packetCounter == 0)
+		{
+			// construct the metadata packet. This will be handled separately since it's of a differnet structure than 
+			// the Packet Struct
+
+			CreateMetadataPacket(totalPacketsRequired, 'b');
+
+			packetCounter++;
+		}
 
 		for (int i = 0; i < totalPacketsRequired; i++)
 		{
-			char tmp[DATA_BUFFER];
+			char tmp[DATA_BUFFER] = { 0 };
 
 			for (int j = 0; j < DATA_BUFFER; j++)
 			{
-				tmp[j] = AllBinaryData[counter];
+				strcat(tmp, &AllBinaryData[counter]);
 				counter++;
 			}
 
-			binaryDataChunks.push_back(tmp);
-		}
+			tmp[DATA_BUFFER - 1] = '\0';
 
-		vector<char[DATA_BUFFER]>::iterator iter = binaryDataChunks.begin();
-
-		for (iter; iter != binaryDataChunks.end(); iter++)
-		{
-			Packet newPacket = CreatePacket(PACKET_TYPE_DATA, packetCounter, *iter, totalPacketsRequired);
+			Packet newPacket = CreatePacket(PACKET_TYPE_DATA, packetCounter, tmp, totalPacketsRequired);
 			packetList.push_back(newPacket);
 
 			packetCounter++;
 		}
 	}
+}
+
+void FileReader::CreateMetadataPacket(int maxPacketNum, char dataType) {
+
+	MetaDataPacket mdp;
+
+	strncpy(mdp.fileName, FileName.c_str(), METADATA_BUFFER);
+	strncpy(mdp.md5hash, MD5hash.c_str(), 16);
+	mdp.fileSize = fileSize;
+	mdp.dataType = dataType;
+	mdp.maxPacketNumber = maxPacketNum;
+	mdp.packetType = 'M';
+
+	metadataPacket = mdp;
 }

@@ -40,11 +40,6 @@ const float SendRate = 1.0f / 30.0f;
 const float TimeOut = 10.0f;
 const int PacketSize = 256;
 
-const char packetNumIndicator[5] = "<PN>";
-const char maxPacketNumIndicator[5] = "<MP>";
-const char packetTypeIndicator[5] = "<PT>";
-const char dataIndicator[5] = "<DT>";
-
 class FlowControl
 {
 public:
@@ -180,9 +175,11 @@ int checkArgs(int numArgs, char* args[])
 
 int main(int argc, char* argv[])
 {
-	FileReader fr = FileReader("C:/tmp/sample.txt", "-t");
+	FileReader fr = FileReader("C:/tmp/error.jpg", "-b");
 	list<Packet> packetsToSend = fr.packetList;
 	list<Packet>::iterator packetIter = packetsToSend.begin();
+	MetaDataPacket mdPacket = fr.metadataPacket;
+	bool MetaDataPacketSent = false;
 
 
 	int result = checkArgs(argc, argv);
@@ -300,51 +297,99 @@ int main(int argc, char* argv[])
 			unsigned char packet[PacketSize];
 			memset(packet, 0, sizeof(packet));
 
-			// packet construction (using an incremented pointer to fill it):
-			unsigned char* ptr = packet;
-
-			// check if the packer iterator is at the end. If so, we want to stop.
-			if (packetIter == packetsToSend.end())
+			if (!MetaDataPacketSent)
 			{
-				break;
-			}
+				// construct and send metadata
 
-			// add packet number
-			memcpy(ptr, packetNumIndicator, 4);
-			ptr += 4;
+				unsigned char* ptr = packet;
 
-			itoa(packetIter->packetNumber, (char*)ptr, 10);
-			ptr += 8;
-
-			// add packet type
-			memcpy(ptr, packetTypeIndicator, 4);
-			ptr += 4;
-
-			*ptr = packetIter->packetType;
-			ptr++;
-
-			// add max packet number
-			memcpy(ptr, maxPacketNumIndicator, 4);
-			ptr += 4;
-
-			itoa(packetIter->maxPacketNumber, (char*)ptr, 10);
-			ptr += 8;
-
-			// add the rest of the data
-			memcpy(ptr, dataIndicator, 4);
-			ptr += 4;
-
-			int dataSize = strlen(packetIter->data);
-			for (int i = 0; i < dataSize; i++)
-			{
-				*ptr = packetIter->data[i];
+				// packet type
+				memcpy(ptr, &mdPacket.packetType, sizeof(mdPacket.packetType));
 				ptr++;
+
+				// data type (d or t)
+				memcpy(ptr, &mdPacket.dataType, sizeof(mdPacket.dataType));
+				ptr++;
+
+				// file size as a float in KB converted to string:
+				string fs = to_string((float)mdPacket.fileSize / (float)1000);
+				int len = fs.length();
+				memcpy(ptr, fs.c_str(), len);
+				ptr += len;
+
+				int remainingSpace = 8 - len;
+
+				memset(ptr, '-', remainingSpace);
+				ptr += remainingSpace;
+
+				// md5 hash
+				memcpy(ptr, mdPacket.md5hash, sizeof(mdPacket.md5hash));
+				ptr += sizeof(mdPacket.md5hash);
+
+				// max packet number (8 byte of chars)
+				string maxPacketNum = to_string((mdPacket.maxPacketNumber));
+				int len2 = maxPacketNum.length();
+
+				if (len2 >= 8)
+				{
+					memcpy(ptr, maxPacketNum.c_str(), 8);
+					ptr += 8;
+				}
+				else
+				{
+					memcpy(ptr, maxPacketNum.c_str(), len2);
+					ptr += len2;
+					memset(ptr, '-', (8 - len2));
+					ptr += (8 - len2);
+				}
+
+				// file name
+				memcpy(ptr, mdPacket.fileName, sizeof(mdPacket.fileName));
+
+				MetaDataPacketSent = true; // don't send metadata packet again
+			}
+			else
+			{
+				// send regular data packets
+				// packet construction (using an incremented pointer to fill it):
+				unsigned char* ptr = packet;
+
+				// check if the packer iterator is at the end. If so, we want to stop.
+				if (packetIter == packetsToSend.end())
+				{
+					break;
+				}
+
+				// add packet number
+				itoa(packetIter->packetNumber, (char*)ptr, 10);
+				ptr += 8;
+
+				// add packet type
+				*ptr = packetIter->packetType;
+				ptr++;
+
+				// add max packet number
+				itoa(packetIter->maxPacketNumber, (char*)ptr, 10);
+				ptr += 8;
+
+				// add the rest of the data
+				int dataSize = strlen(packetIter->data);
+				for (int i = 0; i < dataSize; i++)
+				{
+					*ptr = packetIter->data[i];
+					ptr++;
+				}
+
+
+				// we;re done with this packet, so we increment the packet iterator to the next
+				// packet in the packetList
+				packetIter++;
 			}
 
-
-			// we;re done with this packet, so we increment the packet iterator to the next
-			// packet in the packetList
-			packetIter++;
+			for (int i = 0; i < sizeof(packet); i++)
+			{
+				printf("%c", packet[i]);
+			}
 
 			connection.SendPacket(packet, sizeof(packet));
 			// iterate through the group of packets after ack
@@ -353,7 +398,7 @@ int main(int argc, char* argv[])
 		}
 
 
-		
+
 		// will be used to write to the file
 		FileCreator fc = FileCreator();
 
@@ -365,37 +410,37 @@ int main(int argc, char* argv[])
 			int bytes_read = connection.ReceivePacket(packet, sizeof(packet));
 
 			int doneTransfer = 0;
-			
+
 			if (bytes_read != 0)
 			{
-				// check if metadata packet
-				// update the file creator with metadata packet information
-				if (packet[1] == 'M')
-				{
-					
-					// Sample metadata packet: [packetNum][M][t or b][size][hash - 16][filename] ?
-					// this function will store all the metadata for later
-					// sets filename etc.
-					fc.ParseMetadataPacket(packet);
+				//// check if metadata packet
+				//// update the file creator with metadata packet information
+				//if (packet[1] == 'M')
+				//{
+
+				//	// Sample metadata packet: [packetNum][M][t or b][size][hash - 16][filename] ?
+				//	// this function will store all the metadata for later
+				//	// sets filename etc.
+				//	fc.ParseMetadataPacket(packet);
 
 
-					
-					
 
-				}
-				// data packet received
-				// parse data and write it to the file
-				else
-				{
-					// Sample packet: [packetNum][D][maxPacketNumber][data]
-					// set doneTransfer to 1 if current packet number == last packet
 
-					doneTransfer = fc.AppendToFile(packet);
-					if (doneTransfer != 0)
-					{
-						break;
-					}
-				}
+
+				//}
+				//// data packet received
+				//// parse data and write it to the file
+				//else
+				//{
+				//	// Sample packet: [packetNum][D][maxPacketNumber][data]
+				//	// set doneTransfer to 1 if current packet number == last packet
+
+				//	doneTransfer = fc.AppendToFile(packet);
+				//	if (doneTransfer != 0)
+				//	{
+				//		break;
+				//	}
+				//}
 			}
 
 			if (bytes_read == 0)

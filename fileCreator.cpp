@@ -79,13 +79,13 @@ void FileCreator::SetFilePtr()
 {
 	if (this->fileName != "")
 	{
-		
+
 		// opens file as text
 		// filename needed to be converted from string to c-style string to open
 		// need to open for read and write to compare hashes later
 		if (this->fileType == "-t")
 		{
-			this->fp.open(this->fileName, ios::in | ios::out );
+			this->fp.open(this->fileName, ios::in | ios::out);
 		}
 		else
 		{
@@ -96,8 +96,8 @@ void FileCreator::SetFilePtr()
 		{
 			cout << "Unable to open file for writing";
 		}
-		
-		
+
+
 	}
 }
 
@@ -112,7 +112,7 @@ void FileCreator::SetReceivedHash(string hash)
 // 
 int FileCreator::ParseMetadataPacket(unsigned char* packetData)
 {
-	
+
 	// convert to a C++ string for convenience
 	string packetStr = string((char*)packetData);
 
@@ -120,7 +120,7 @@ int FileCreator::ParseMetadataPacket(unsigned char* packetData)
 	// set which type of file to write
 	if (packetData[FILE_TYPE_INDEX] == 't')
 	{
-		SetFileType("-t"); 
+		SetFileType("-t");
 	}
 	else
 	{
@@ -132,15 +132,15 @@ int FileCreator::ParseMetadataPacket(unsigned char* packetData)
 	string fileSize = packetStr.substr(FILE_SIZE_INDEX, FILE_SIZE_BYTE_MAX);
 	SetFileSize(stoi(fileSize));
 
-	
+
 	// set hash
 	SetReceivedHash(packetStr.substr(HASH_INDEX, HASH_LENGTH));
 
 	// set file name
 	SetFileName(packetStr.erase(0, HASH_INDEX + HASH_LENGTH));
 
-	
-	
+
+
 	return 0;
 }
 
@@ -149,7 +149,7 @@ int FileCreator::ParseMetadataPacket(unsigned char* packetData)
 // write contents to file that is opened
 int FileCreator::AppendToFile(unsigned char* packetData)
 {
-	
+
 	string packetStr = string((char*)packetData);
 
 	// update current packet number
@@ -162,7 +162,7 @@ int FileCreator::AppendToFile(unsigned char* packetData)
 	// has not reached the last packet
 	if (this->currentPacketNumber != this->maxPacketNumber)
 	{
-		
+
 		string dataToWrite = packetStr.erase(0, 10);
 		this->fp << (dataToWrite.c_str());
 		return 0;
@@ -179,7 +179,7 @@ int FileCreator::AppendToFile(unsigned char* packetData)
 
 
 
-	
+
 }
 
 // compares the hashes
@@ -187,14 +187,14 @@ int FileCreator::AppendToFile(unsigned char* packetData)
 // 0 if correct and -1 if not matching
 int FileCreator::VerifyHash()
 {
-	
+
 	// generate hash from end file
 
 
 
 
 	// compare both hashes
-	
+
 	return 0;
 }
 
@@ -207,5 +207,6 @@ int FileCreator::Close()
 	if (this->fp.is_open())
 	{
 		fp.close();
+		return 0;
 	}
 }

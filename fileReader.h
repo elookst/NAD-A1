@@ -7,12 +7,14 @@
 #include <list>
 #include <vector>
 
+typedef unsigned char BYTE;
+
 using namespace std;
 
 #pragma warning(disable:4996)
 
-const int DATA_BUFFER = 218; // max number of bytes without protocol headers that can be stored into a data packet + delimiters
-const int METADATA_BUFFER = 221;
+const int DATA_BUFFER = 238; // max number of bytes without protocol headers that can be stored into a data packet + delimiters
+const int METADATA_BUFFER = 220;
 const char PACKET_TYPE_DATA = 'D';
 const char PACKET_TYPE_METADATA = 'M';
 const int NULL_CHAR = 1;
@@ -22,20 +24,21 @@ const int NULL_CHAR = 1;
 struct Packet
 {
 
-	int packetNumber; // starts at 0, max value is maxPacketNumber, helps to remember order of packets
-	char packetType; // M for metadata and D for content
-	int maxPacketNumber; // ending packet number of the entire file read
-	char data[DATA_BUFFER + NULL_CHAR];
+	int packetNumber; // 0  // starts at 0, max value is maxPacketNumber, helps to remember order of packets
+	char packetType; // 8 // M for metadata and D for content
+	int maxPacketNumber; // 9 // ending packet number of the entire file read
+	char data[DATA_BUFFER + NULL_CHAR]; // 17
 
 };
 
 struct MetaDataPacket
 {
-	char packetType;
-	int fileSize;
-	char md5hash[16];
-	int maxPacketNumber;
-	char fileName[METADATA_BUFFER];
+	char packetType; // 0
+	char dataType;   // 1
+	int fileSize;    // 2
+	char md5hash[16]; // 10
+	int maxPacketNumber; // 26
+	char fileName[METADATA_BUFFER]; // 34
 };
 
 
@@ -58,6 +61,7 @@ public:
 	vector<char> AllBinaryData; // store all data from binary file here
 	string MD5hash;
 	list<Packet> packetList;
+	MetaDataPacket metadataPacket;
 
 	FileReader(string fileName, string fileType); // constructor
 	Packet CreatePacket(char type, int packetNum, char data[], int maxPacketNum);
@@ -65,6 +69,7 @@ public:
 	void SetFileSize(void);
 	void SetMD5hash(void);
 	void SplitFileIntoPackets(void);
+	void CreateMetadataPacket(int maxPacketNum, char dataType);
 
 };
 #endif
