@@ -415,32 +415,32 @@ int main(int argc, char* argv[])
 			{
 				//// check if metadata packet
 				//// update the file creator with metadata packet information
-				//if (packet[1] == 'M')
-				//{
+				if (packet[1] == 'M')
+				{
 
-				//	// Sample metadata packet: [packetNum][M][t or b][size][hash - 16][filename] ?
-				//	// this function will store all the metadata for later
-				//	// sets filename etc.
-				//	fc.ParseMetadataPacket(packet);
-
-
+					// Sample metadata packet: [packetNum][M][t or b][size][hash - 16][filename] ?
+					// this function will store all the metadata for later
+					// sets filename etc.
+					fc.ParseMetadataPacket(packet);
 
 
 
-				//}
-				//// data packet received
-				//// parse data and write it to the file
-				//else
-				//{
-				//	// Sample packet: [packetNum][D][maxPacketNumber][data]
-				//	// set doneTransfer to 1 if current packet number == last packet
 
-				//	doneTransfer = fc.AppendToFile(packet);
-				//	if (doneTransfer != 0)
-				//	{
-				//		break;
-				//	}
-				//}
+
+				}
+				// data packet received
+				// parse data and write it to the file
+				else
+				{
+					// Sample packet: [packetNum][D][maxPacketNumber][data]
+					// set doneTransfer to 1 if current packet number == last packet
+
+					doneTransfer = fc.AppendToFile(packet);
+					if (doneTransfer != 0)
+					{
+						break;
+					}
+				}
 			}
 
 			if (bytes_read == 0)
