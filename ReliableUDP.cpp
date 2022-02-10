@@ -23,6 +23,8 @@
 #include "fileReader.h"
 #include "fileCreator.h"
 
+#define SERVER_MODE 1
+
 //#define SHOW_ACKS
 
 // prototypes
@@ -145,44 +147,104 @@ int checkArgs(int numArgs, char* args[])
 	// default if starting program is to be a server if no other args
 	if (numArgs == 1)
 	{
-
+		return SERVER_MODE;
 	}
-	// check that client with ip address and filename was specified
-	// maybe default file type is binary?
-	else if (numArgs == 4)
+
+	if (numArgs == 2)
 	{
-
+		printf("\nPlease provide 3 arguments: the IP to send to, the name of the file you want to send, and the type of file"
+			"\n(\"-t\" for text and \"-b\") for binary. Or, provide no args to run as a server.\n");
+		return -1;
 	}
-	// check that client, ip, filename, and filetype is in arguments
-	else if (numArgs == 5)
+
+	if (numArgs == 3)
 	{
-
+		printf("\nPlease provide 3 arguments: the IP to send to, the name of the file you want to send, and the type of file"
+			"\n(\"-t\" for text and \"-b\") for binary. Or, provide no args to run as a server.\n");
+		return -1;
 	}
-	// invalid arguments given
-	// display error and exit
-	else
+
+	if (numArgs == 4)
 	{
+		// check if valid IP was provided as first param
+		int a, b, c, d;
+		// this is checking for a valid ip address given
+		if (sscanf(args[1], "%d.%d.%d.%d", &a, &b, &c, &d) != 4)
+		{
+			printf("\nPease provide a valid IP address as the first cmd argument.\n");
+			return -1;
+		}
 
-		// display usage and error
+		// check if file provided exists
+		FILE* fp;
+		fp = fopen(args[2], "r");
+		if (fp == NULL)
+		{
+			printf("\nPlease provide a valid file name as the second cmd argument. The file provided does not exist.\n");
+			return -1;
+		}
 
-		result = -1;
+		// check if the file type was provided and valid
+		if (strcmp(args[3], "-t") == 0 || strcmp(args[3], "-b") == 0)
+		{
+			return 0;
+		}
+		else
+		{
+			printf("Please provide valid file type indicators (\"-t\" for text and \"-b\") for binary");
+			return -1;
+		}
 	}
 
-
-	return result;
-
+	return 0;
 }
 
 int main(int argc, char* argv[])
 {
-	FileReader fr = FileReader("C:/tmp/error.jpg", "-b");
+	string file;
+	string filetype;
+
+	int result = checkArgs(argc, argv);
+
+	enum Mode
+	{
+		Client,
+		Server
+	};
+	Mode mode;
+	Address address;
+
+	if (result == -1)
+	{
+		return 0;
+	}
+	else if (result == SERVER_MODE)
+	{
+		mode = Server;
+	}
+	else
+	{
+		int a, b, c, d;
+#pragma warning(suppress : 4996)
+
+		// this is checking for a valid ip address given
+		sscanf(argv[1], "%d.%d.%d.%d", &a, &b, &c, &d);
+		mode = Client;
+		address = Address(a, b, c, d, ServerPort);
+
+		file = argv[2];
+		filetype = argv[3];
+	}
+
+
+	FileReader fr = FileReader(file, filetype);
 	list<Packet> packetsToSend = fr.packetList;
 	list<Packet>::iterator packetIter = packetsToSend.begin();
 	MetaDataPacket mdPacket = fr.metadataPacket;
 	bool MetaDataPacketSent = false;
 
-
-	int result = checkArgs(argc, argv);
+	// will be used to write to the file
+	FileCreator fc = FileCreator();
 
 	// make sure to validate fileSize so that the int values for packet numbers aren't more than 7 digits!
 
@@ -194,33 +256,6 @@ int main(int argc, char* argv[])
 	// use a sample text and binary file and generate their hashes by the FileReader class and FileCreator class?
 	// compare both starting files and ending files?
 
-
-	enum Mode
-	{
-		Client,
-		Server
-	};
-
-
-	// assign mode and address based on result from checkArgs only
-
-	Mode mode = Server;
-	Address address;
-
-
-	// remove this, arguments will be parsed by checkArgs function
-	if (argc >= 2)
-	{
-		int a, b, c, d;
-#pragma warning(suppress : 4996)
-
-		// this is checking for a valid ip address given
-		if (sscanf(argv[1], "%d.%d.%d.%d", &a, &b, &c, &d))
-		{
-			mode = Client;
-			address = Address(a, b, c, d, ServerPort);
-		}
-	}
 
 	// initialize
 
@@ -424,22 +459,18 @@ int main(int argc, char* argv[])
 				packetIter++;
 			}
 
+			// display packet
 			for (int i = 0; i < sizeof(packet); i++)
 			{
 				printf("%c", packet[i]);
 			}
+			printf("\n");
 
 			connection.SendPacket(packet, sizeof(packet));
 			// iterate through the group of packets after ack
 
 			sendAccumulator -= 1.0f / sendRate;
 		}
-
-
-
-		// will be used to write to the file
-		FileCreator fc = FileCreator();
-
 
 		// server receiving info here
 		while (true)
@@ -495,7 +526,7 @@ int main(int argc, char* argv[])
 
 
 		// call methods within FileCreator class to validate the file and hash made
-		fc.VerifyHash();
+		// fc.VerifyHash();
 
 		// close the file created
 		fc.Close();
@@ -547,9 +578,9 @@ int main(int argc, char* argv[])
 		}
 
 		net::wait(DeltaTime);
-			}
+	}
 
 	ShutdownSockets();
 
 	return 0;
-		}
+}
