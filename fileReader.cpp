@@ -67,24 +67,31 @@ void FileReader::Read()
 	else if (FileType == "-b")
 	{
 		streampos size;
-
-		ifstream file(FileName, ios::binary);
-		if (file.is_open())
+		try
 		{
-			file.unsetf(ios::skipws);
-			file.seekg(0, ios::end);
-			size = file.tellg();
-			file.seekg(0, ios::beg);
+			ifstream file(FileName, ios::binary);
+			if (file.is_open())
+			{
+				file.unsetf(ios::skipws);
+				file.seekg(0, ios::end);
+				size = file.tellg();
+				file.seekg(0, ios::beg);
 
-			AllBinaryData.reserve(size);
+				AllBinaryData.reserve(size);
 
-			AllBinaryData.insert(AllBinaryData.begin(),
-				std::istream_iterator<char>(file),
-				std::istream_iterator<char>());
+				AllBinaryData.insert(AllBinaryData.begin(),
+					std::istream_iterator<char>(file),
+					std::istream_iterator<char>());
 
-			file.close();
+				file.close();
+			}
+			else cout << "Unable to open file";
 		}
-		else cout << "Unable to open file";
+		catch(exception& e)
+		{
+			cout << "Error: " << e.what();
+		}
+
 	}
 }
 
