@@ -175,11 +175,16 @@ int checkArgs(int numArgs, char* args[])
 
 int main(int argc, char* argv[])
 {
-	FileReader fr = FileReader("C:/tmp/error.jpg", "-b");
+	FileReader fr = FileReader("C:\\tmp\\error.jpg", "-b");
+	//FileReader fr = FileReader("C:\\tmp\\test.txt", "-t");
 	list<Packet> packetsToSend = fr.packetList;
 	list<Packet>::iterator packetIter = packetsToSend.begin();
 	MetaDataPacket mdPacket = fr.metadataPacket;
 	bool MetaDataPacketSent = false;
+	int doneTransfer = 0;
+
+	// will be used to write to the file
+	FileCreator fc = FileCreator();
 
 
 	int result = checkArgs(argc, argv);
@@ -424,10 +429,10 @@ int main(int argc, char* argv[])
 				packetIter++;
 			}
 
-			for (int i = 0; i < sizeof(packet); i++)
-			{
-				printf("%c", packet[i]);
-			}
+			//for (int i = 0; i < sizeof(packet); i++)
+			//{
+			//	printf("%c", packet[i]);
+			//}
 
 			connection.SendPacket(packet, sizeof(packet));
 			// iterate through the group of packets after ack
@@ -436,33 +441,26 @@ int main(int argc, char* argv[])
 		}
 
 
-
-		// will be used to write to the file
-		FileCreator fc = FileCreator();
-
-
 		// server receiving info here
 		while (true)
 		{
 			unsigned char packet[256];
 			int bytes_read = connection.ReceivePacket(packet, sizeof(packet));
 
-			int doneTransfer = 0;
-
 			if (bytes_read != 0)
 			{
+				
+				cout << packet << "\nEND OF PACKET\n\n";
+				
 				//// check if metadata packet
 				//// update the file creator with metadata packet information
-				if (packet[1] == 'M')
+				if (packet[0] == 'M')
 				{
 
 					// Sample metadata packet: [packetNum][M][t or b][size][hash - 16][filename] ?
 					// this function will store all the metadata for later
 					// sets filename etc.
 					fc.ParseMetadataPacket(packet);
-
-
-
 
 
 				}
@@ -494,11 +492,7 @@ int main(int argc, char* argv[])
 		// display on main page
 
 
-		// call methods within FileCreator class to validate the file and hash made
-		fc.VerifyHash();
 
-		// close the file created
-		fc.Close();
 
 		// display the duration
 
@@ -527,6 +521,15 @@ int main(int argc, char* argv[])
 
 		statsAccumulator += DeltaTime;
 
+		if (doneTransfer != 0)
+		{
+			// call methods within FileCreator class to validate the file and hash made
+			//fc.VerifyHash();
+
+			// close the file created
+			//fc.Close();
+		}
+
 		while (statsAccumulator >= 0.25f && connection.IsConnected())
 		{
 			float rtt = connection.GetReliabilitySystem().GetRoundTripTime();
@@ -547,9 +550,14 @@ int main(int argc, char* argv[])
 		}
 
 		net::wait(DeltaTime);
-			}
+	}
+
+
+
+
 
 	ShutdownSockets();
 
 	return 0;
-		}
+	
+}

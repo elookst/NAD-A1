@@ -56,6 +56,7 @@ void FileReader::Read()
 			while (file.get(ch))
 			{
 				AllTextFileData.push_back(ch);
+			
 			}
 			file.close();
 		}
