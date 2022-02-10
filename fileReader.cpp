@@ -159,7 +159,7 @@ void FileReader::SplitFileIntoPackets()
 	else if (FileType == "-b")
 	{
 		int binaryDataLength = AllBinaryData.size();
-		int totalPacketsRequired = AllBinaryData.size() / DATA_BUFFER;
+		int totalPacketsRequired = (AllBinaryData.size() / DATA_BUFFER) + 1; // + 1 because it doesn't divide evenly
 		int counter = 0; // used to iterate over the binary data
 
 		if (packetCounter == 0)
@@ -178,11 +178,19 @@ void FileReader::SplitFileIntoPackets()
 
 			for (int j = 0; j < DATA_BUFFER; j++)
 			{
-				strcat(tmp, &AllBinaryData[counter]);
-				counter++;
+				if (counter < binaryDataLength)
+				{
+					char tmp2[2] = { AllBinaryData.at(counter) };
+					strcat(tmp, tmp2);
+					counter++;
+				}
+				else
+				{
+					// this prevents the loop from accessing elements beyond the length of the 
+					// vector in the last packet
+					break;
+				}
 			}
-
-			tmp[DATA_BUFFER - 1] = '\0';
 
 			Packet newPacket = CreatePacket(PACKET_TYPE_DATA, packetCounter, tmp, totalPacketsRequired);
 			packetList.push_back(newPacket);

@@ -314,13 +314,21 @@ int main(int argc, char* argv[])
 				// file size as a float in KB converted to string:
 				string fs = to_string((float)mdPacket.fileSize / (float)1000);
 				int len = fs.length();
-				memcpy(ptr, fs.c_str(), len);
-				ptr += len;
 
-				int remainingSpace = 8 - len;
+				if (len >= 8)
+				{
+					memcpy(ptr, fs.c_str(), 8);
+					ptr += 8;
+				}
+				else
+				{
+					memcpy(ptr, fs.c_str(), len);
+					ptr += len;
 
-				memset(ptr, '-', remainingSpace);
-				ptr += remainingSpace;
+					memset(ptr, '-', (8 - len));
+					ptr += (8 - len);
+				}
+
 
 				// md5 hash
 				memcpy(ptr, mdPacket.md5hash, sizeof(mdPacket.md5hash));
@@ -360,17 +368,47 @@ int main(int argc, char* argv[])
 					break;
 				}
 
-				// add packet number
-				itoa(packetIter->packetNumber, (char*)ptr, 10);
-				ptr += 8;
+				// add packet number ( makes ure to fill the first 8 bytes with blanks if small)
+				string pNum = to_string(packetIter->packetNumber);
+				int len = pNum.length();
+
+				if (len >= 8)
+				{
+					itoa(packetIter->packetNumber, (char*)ptr, 10);
+					ptr += 8;
+				}
+				else
+				{
+					// fill first n chars with "-" to fill the space of the 8 bytes if unused
+					memset(ptr, '-', (8 - len));
+					ptr += (8 - len);
+					itoa(packetIter->packetNumber, (char*)ptr, 10);
+					ptr += len;
+
+				}
 
 				// add packet type
 				*ptr = packetIter->packetType;
 				ptr++;
 
-				// add max packet number
-				itoa(packetIter->maxPacketNumber, (char*)ptr, 10);
-				ptr += 8;
+				// add maxPacketNumber, but buffer the 8 bytes with blanks
+				string mpNum = to_string(packetIter->maxPacketNumber);
+				int len2 = mpNum.length();
+
+				if (len2 >= 8)
+				{
+					itoa(packetIter->maxPacketNumber, (char*)ptr, 10);
+					ptr += 8;
+				}
+				else
+				{
+					// fill first n chars with "-" to fill the space of the 8 bytes if unused
+					memset(ptr, '-', (8 - len2));
+					ptr += (8 - len2);
+					itoa(packetIter->maxPacketNumber, (char*)ptr, 10);
+					ptr += len2;
+
+				}
 
 				// add the rest of the data
 				int dataSize = strlen(packetIter->data);
@@ -509,9 +547,9 @@ int main(int argc, char* argv[])
 		}
 
 		net::wait(DeltaTime);
-	}
+			}
 
 	ShutdownSockets();
 
 	return 0;
-}
+		}
