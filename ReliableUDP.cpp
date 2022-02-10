@@ -361,7 +361,7 @@ int main(int argc, char* argv[])
 		// server receiving info here
 		while (true)
 		{
-			unsigned char packet[256];
+			unsigned char packet[PacketSize];
 			int bytes_read = connection.ReceivePacket(packet, sizeof(packet));
 
 			int doneTransfer = 0;
@@ -377,9 +377,6 @@ int main(int argc, char* argv[])
 					// this function will store all the metadata for later
 					// sets filename etc.
 					fc.ParseMetadataPacket(packet);
-
-
-					
 					
 
 				}
@@ -407,18 +404,20 @@ int main(int argc, char* argv[])
 
 		auto duration = duration_cast<seconds>(stopTime - startTime);
 
+		// close the file created
+		fc.Close();
+
 		// calculate megabits per second for file transfer using file size / duration
 		// display on main page
-
+		fc.SetCreatedFileHash();
 
 		// call methods within FileCreator class to validate the file and hash made
 		fc.VerifyHash();
 
-		// close the file created
-		fc.Close();
+
 
 		// display the duration
-
+		fc.DisplayTransferTime(duration);
 
 
 		// show packets that were acked this frame

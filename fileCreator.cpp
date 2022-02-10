@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <chrono>
 #include "fileReader.h"
 #include "fileCreator.h"
 #include "md5.h"
@@ -23,6 +24,8 @@ FileCreator::FileCreator()
 	this->fileSize = 0;
 	this->currentPacketNumber = 0;
 	this->maxPacketNumber = 1;
+	this->textData = "";
+	this->binaryData = "";
 }
 
 
@@ -74,6 +77,30 @@ void FileCreator::SetFileType(const char* fileType)
 	this->fileType = string(fileType);
 }
 
+void FileCreator::SetBinaryData(char* binaryData)
+{
+	size_t size = sizeof(binaryData);
+	string binaryStr = string(reinterpret_cast<char const*>(binaryData), size);
+	this->binaryData = binaryStr;
+}
+
+string FileCreator::GetBinaryData(void)
+{
+	return this->binaryData;
+}
+
+void FileCreator::SetTextData(char* textData)
+{
+	size_t size = sizeof(textData);
+	string textStr = string(reinterpret_cast<char const*>(textData), size);
+	this->textData = textStr;
+}
+
+string FileCreator::GetTextData(void)
+{
+	return this->textData;
+}
+
 // opens the file for writing from pointer
 void FileCreator::SetFilePtr()
 {
@@ -114,7 +141,9 @@ int FileCreator::ParseMetadataPacket(unsigned char* packetData)
 {
 	
 	// convert to a C++ string for convenience
-	string packetStr = string((char*)packetData);
+	size_t packetLength = sizeof(packetData);
+
+	string packetStr = string(reinterpret_cast<char const*>(packetData), packetLength);
 
 
 	// set which type of file to write
@@ -150,7 +179,10 @@ int FileCreator::ParseMetadataPacket(unsigned char* packetData)
 int FileCreator::AppendToFile(unsigned char* packetData)
 {
 	
-	string packetStr = string((char*)packetData);
+	// convert to a C++ string for convenience
+	size_t packetLength = sizeof(packetData);
+
+	string packetStr = string(reinterpret_cast<char const*>(packetData), packetLength);
 
 	// update current packet number
 	SetCurrentPacketNumber(stoi(packetStr.substr(0, 1)));
@@ -182,24 +214,115 @@ int FileCreator::AppendToFile(unsigned char* packetData)
 	
 }
 
-// compares the hashes
-// received vs generated from final file
-// 0 if correct and -1 if not matching
-int FileCreator::VerifyHash()
+// gets all the text or binary file data
+// stores it in string member
+int FileCreator::ReadCreatedFileContents()
 {
-	
-	// generate hash from end file
+	// text file
+	if (this->fileType == "-t")
+	{
+		streampos size;
+		char* textData;
+		ifstream file(this->fileName, ios::ate);
+		
+		if (file.is_open())
+		{
+			// get file size before reading
+			size = file.tellg();
+			textData = new char[size];
+
+			// reset position to beginning
+			file.seekg(0, ios::beg);
+			file.read(textData, size);
+
+			// set text data member
+			SetTextData(textData);
+			file.close();
+
+			delete[] textData;
+		}
+		else
+		{
+			cout << "Error: could not read file created.";
+		}
 
 
+	}
+	else if (this->fileType == "-b")
+	{
+		
+		streampos size;
+		char* binaryData;
+		
+		// open file, move position to end to get size requirement
+		ifstream file(this->fileName, ios::binary | ios::ate);
+		if (file.is_open())
+		{
+			size = file.tellg();
+			binaryData = new char[size];
+
+			// reset position to beginning
+			file.seekg(0, ios::beg);
+			file.read(binaryData, size);
+			SetBinaryData(binaryData);
+			file.close();
+
+			delete[] binaryData;
+		}
+		else
+		{
+			cout << "Error: could not read file created.";
+		}
+
+	}
 
 
-	// compare both hashes
 	
 	return 0;
 }
 
 
+// using text or binary file contents
+// generates the hash
+void FileCreator::SetCreatedFileHash(void)
+{
+	if (this->fileType == "-t")
+	{
+		this->createdFileHash = md5(GetTextData());
+	}
+	else
+	{
+		this->createdFileHash = md5(GetBinaryData());
+	}
+}
 
+// compares received hash to created file hash
+int FileCreator::VerifyHash(void)
+{
+
+	if (this->recievedHash == this->createdFileHash)
+	{
+		cout << "File transfered successfully.";
+		return 0;
+	}
+	else
+	{
+		cout << "File did not transfer successfully - unverified hashes";
+		return -1;
+	}
+
+}
+
+
+void FileCreator::DisplayTransferTime(std::chrono::seconds duration)
+{
+	
+	double transferRate = (double)this->fileSize / duration.count();
+	
+	cout << "Calculated Transfer Time: " << transferRate / 1000000 << "MBps";
+
+
+}
 
 // closes fp
 int FileCreator::Close()
@@ -208,4 +331,6 @@ int FileCreator::Close()
 	{
 		fp.close();
 	}
+
+	return 0;
 }
