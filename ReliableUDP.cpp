@@ -246,7 +246,7 @@ int main(int argc, char* argv[])
 	bool MetaDataPacketSent = false;
 
 	// will be used to write to the file
-	FileCreator fc = FileCreator();
+	FileCreator fc = FileCreator(file, filetype);
 
 	// make sure to validate fileSize so that the int values for packet numbers aren't more than 7 digits!
 
@@ -553,7 +553,7 @@ int main(int argc, char* argv[])
 			for (int i = 1; i < ack_count; ++i)
 				printf(",%d", acks[i]);
 			printf("\n");
-	}
+		}
 #endif
 
 		// update connection
@@ -586,7 +586,7 @@ int main(int argc, char* argv[])
 		}
 
 		net::wait(DeltaTime);
-}
+	}
 
 
 

@@ -17,11 +17,10 @@ using namespace std;
 #pragma warning(disable:4996)
 
 // sets blank filename etc.
-FileCreator::FileCreator()
+FileCreator::FileCreator(string fileName, string fileType)
 {
-	this->fileName = "C:\\tmp\\error2.jpg";
-	//this->fileName = "C:\\tmp\\test2.txt";
-	this->fileType = "-t";
+	this->fileName = fileName;
+	this->fileType = fileType;
 	this->recievedHash = "";
 	this->fileSize = 0;
 	this->currentPacketNumber = 0;
@@ -72,8 +71,7 @@ string FileCreator::GetFileName(void)
 void FileCreator::SetFileName(string filename)
 {
 
-	string copy = "C:\\tmp\\error2.jpg";
-	// string copy = "C:\\tmp\\test2.txt";
+	string copy = filename;
 	this->fileName = copy;
 }
 
