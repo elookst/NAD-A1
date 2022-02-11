@@ -429,10 +429,6 @@ int main(int argc, char* argv[])
 				packetIter++;
 			}
 
-			//for (int i = 0; i < sizeof(packet); i++)
-			//{
-			//	printf("%c", packet[i]);
-			//}
 
 			connection.SendPacket(packet, sizeof(packet));
 			// iterate through the group of packets after ack
@@ -450,10 +446,10 @@ int main(int argc, char* argv[])
 			if (bytes_read != 0)
 			{
 				
-				cout << packet << "\nEND OF PACKET\n\n";
+				//cout << packet << "\nEND OF PACKET\n\n";
 				
-				//// check if metadata packet
-				//// update the file creator with metadata packet information
+				// check if metadata packet
+				// update the file creator with metadata packet information
 				if (packet[0] == 'M')
 				{
 
@@ -474,6 +470,19 @@ int main(int argc, char* argv[])
 					doneTransfer = fc.AppendToFile(packet);
 					if (doneTransfer != 0)
 					{
+						// gets stop time from transfer
+						auto stopTime = high_resolution_clock::now();
+
+						auto duration = duration_cast<milliseconds>(stopTime - startTime);
+
+						cout << "Time of transfer: " << duration.count() << "ms\n";
+						
+						// call methods within FileCreator class to validate the file and hash made
+						fc.ReadCreatedFileContents();
+						fc.SetCreatedFileHash();
+						fc.VerifyHash();
+						fc.DisplayTransferTime(duration);
+						
 						break;
 					}
 				}
@@ -483,10 +492,7 @@ int main(int argc, char* argv[])
 				break;
 		}
 
-		// gets stop time from transfer
-		auto stopTime = high_resolution_clock::now();
 
-		auto duration = duration_cast<seconds>(stopTime - startTime);
 
 		// calculate megabits per second for file transfer using file size / duration
 		// display on main page
@@ -521,14 +527,7 @@ int main(int argc, char* argv[])
 
 		statsAccumulator += DeltaTime;
 
-		if (doneTransfer != 0)
-		{
-			// call methods within FileCreator class to validate the file and hash made
-			//fc.VerifyHash();
 
-			// close the file created
-			//fc.Close();
-		}
 
 		while (statsAccumulator >= 0.25f && connection.IsConnected())
 		{
@@ -541,10 +540,10 @@ int main(int argc, char* argv[])
 			float sent_bandwidth = connection.GetReliabilitySystem().GetSentBandwidth();
 			float acked_bandwidth = connection.GetReliabilitySystem().GetAckedBandwidth();
 
-			printf("rtt %.1fms, sent %d, acked %d, lost %d (%.1f%%), sent bandwidth = %.1fkbps, acked bandwidth = %.1fkbps\n",
+			/*printf("rtt %.1fms, sent %d, acked %d, lost %d (%.1f%%), sent bandwidth = %.1fkbps, acked bandwidth = %.1fkbps\n",
 				rtt * 1000.0f, sent_packets, acked_packets, lost_packets,
 				sent_packets > 0.0f ? (float)lost_packets / (float)sent_packets * 100.0f : 0.0f,
-				sent_bandwidth, acked_bandwidth);
+				sent_bandwidth, acked_bandwidth);*/
 
 			statsAccumulator -= 0.25f;
 		}

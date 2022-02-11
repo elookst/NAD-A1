@@ -13,6 +13,7 @@
 
 using namespace std;
 
+
 #pragma warning(disable:4996)
 
 // sets blank filename etc.
@@ -26,7 +27,6 @@ FileCreator::FileCreator()
 	this->currentPacketNumber = 0;
 	this->maxPacketNumber = 1;
 	this->textData = "";
-	this->binaryData = "";
 }
 
 
@@ -85,9 +85,7 @@ void FileCreator::SetFileType(const char* fileType)
 
 void FileCreator::SetBinaryData(char* binaryData)
 {
-	size_t size = sizeof(binaryData);
-	string binaryStr = string(reinterpret_cast<char const*>(binaryData), size);
-	this->binaryData = binaryStr;
+	this->binaryData = binaryData;
 }
 
 string FileCreator::GetBinaryData(void)
@@ -95,12 +93,6 @@ string FileCreator::GetBinaryData(void)
 	return this->binaryData;
 }
 
-void FileCreator::SetTextData(char* textData)
-{
-	size_t size = sizeof(textData);
-	string textStr = string(reinterpret_cast<char const*>(textData), size);
-	this->textData = textStr;
-}
 
 string FileCreator::GetTextData(void)
 {
@@ -139,7 +131,6 @@ int FileCreator::ParseMetadataPacket(unsigned char* packetData)
 	double fFileSize = atof(fileSize.c_str());
 
 	SetFileSize((int)(fFileSize*1000));
-
 	
 	// set hash
 	SetReceivedHash(packetStr.substr(HASH_INDEX, HASH_LENGTH));
@@ -150,6 +141,7 @@ int FileCreator::ParseMetadataPacket(unsigned char* packetData)
 	// set filename
 	// need to remove filler characters
 	string fileNameWithTrail = packetStr.substr(FILENAME_INDEX, METADATA_BUFFER);
+	fileNameWithTrail.erase(remove(fileNameWithTrail.begin(), fileNameWithTrail.end(), '-'), fileNameWithTrail.end());
 	SetFileName(fileNameWithTrail);
 	
 	return 0;
@@ -182,7 +174,7 @@ int FileCreator::AppendToFile(unsigned char* packetData)
 	{
 		string dataToWrite = packetStr.erase(0, 17);
 
-		size_t dataSizeToWrite = 256 - 17;
+		size_t dataSizeToWrite = DATA_BUFFER;
 
 		if (this->fileType == "-t")
 		{
@@ -227,7 +219,6 @@ int FileCreator::AppendToFile(unsigned char* packetData)
 	else
 	{
 		string dataToWrite = packetStr.erase(0, 17);
-
 		size_t dataSizeToWrite = 256 - 17;
 
 		if (this->fileType == "-t")
@@ -281,24 +272,24 @@ int FileCreator::ReadCreatedFileContents()
 	if (this->fileType == "-t")
 	{
 		streampos size;
-		char* textData;
+		char* textRead;
 		ifstream file(GetFileName().c_str(), ios::ate);
 		
 		if (file.is_open())
 		{
 			// get file size before reading
 			size = file.tellg();
-			textData = new char[size];
+			textRead = new char[size];
 
 			// reset position to beginning
 			file.seekg(0, ios::beg);
-			file.read(textData, size);
+			file.read(textRead, size);
 
 			// set text data member
-			SetTextData(textData);
+			this->textData = string(textRead);
 			file.close();
 
-			delete[] textData;
+			delete[] textRead;
 		}
 		else
 		{
@@ -318,6 +309,9 @@ int FileCreator::ReadCreatedFileContents()
 		if (file.is_open())
 		{
 			size = file.tellg();
+
+			cout << "File size expected: " << GetFileSize() << "\n";
+			cout << "Bytes received into new file" << size << "\n";
 			binaryData = new char[size];
 
 			// reset position to beginning
@@ -347,11 +341,12 @@ void FileCreator::SetCreatedFileHash(void)
 {
 	if (this->fileType == "-t")
 	{
-		this->createdFileHash = md5(GetTextData());
+		this->createdFileHash = md5(GetTextData()).substr(0, 16);
+		
 	}
 	else
 	{
-		this->createdFileHash = md5(GetBinaryData());
+		this->createdFileHash = md5(GetBinaryData()).substr(0,16);
 	}
 }
 
@@ -359,26 +354,29 @@ void FileCreator::SetCreatedFileHash(void)
 int FileCreator::VerifyHash(void)
 {
 
+	
 	if (this->recievedHash == this->createdFileHash)
 	{
-		cout << "File transfered successfully.";
+		cout << "File transfered successfully.\n";
 		return 0;
 	}
 	else
 	{
-		cout << "File did not transfer successfully - unverified hashes";
+		cout << "File did not transfer successfully - unverified hashes\n";
+		cout << "Received Hash:" << this->recievedHash << "\n";
+		cout << "Created Hash:" << this->createdFileHash << "\n";
 		return -1;
 	}
 
 }
 
 
-void FileCreator::DisplayTransferTime(std::chrono::seconds duration)
+void FileCreator::DisplayTransferTime(std::chrono::milliseconds duration)
 {
 	
-	double transferRate = (double)this->fileSize / duration.count();
+	float transferRate = (float)GetFileSize() / duration.count();
 	
-	cout << "Calculated Transfer Time: " << transferRate / 1000000 << "MBps";
+	cout << "Calculated Transfer Time: " << (transferRate / 1000) << " MBps\n";
 
 
 }
