@@ -198,9 +198,6 @@ int main(int argc, char* argv[])
 
 	int result = checkArgs(argc, argv);
 
-<<<<<<< HEAD
-=======
->>>>>>> 51cbe4d9fd11512501e95763fa323621091e625a
 	enum Mode
 	{
 		Client,
@@ -474,8 +471,8 @@ int main(int argc, char* argv[])
 
 			if (bytes_read != 0)
 			{
-				
-				
+
+
 				// check if metadata packet
 				// update the file creator with metadata packet information
 				if (packet[0] == 'M')

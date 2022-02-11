@@ -22,7 +22,7 @@ using namespace std;
 // PURPOSE		:	Instantiates a new FileCreator instance.
 // PARAMETERS	:	NONE
 // RETURNS		:	FileCreator object
-FileCreator::FileCreator()
+FileCreator::FileCreator(string fileName, string fileType)
 {
 	this->fileName = fileName;
 	this->fileType = fileType;
@@ -163,11 +163,11 @@ void FileCreator::SetReceivedHash(string hash)
 // RETURNS		:	NONE
 void FileCreator::ParseMetadataPacket(unsigned char* packetData)
 {
-	
+
 	// convert to string format for ease
 	size_t packetLength = METADATA_BUFFER;
 	string packetStr = string(reinterpret_cast<char const*>(packetData), packetLength);
-	
+
 	// set which type of file to write
 	if (packetData[FILE_TYPE_INDEX] == 't')
 	{
@@ -197,8 +197,6 @@ void FileCreator::ParseMetadataPacket(unsigned char* packetData)
 	string fileNameWithTrail = packetStr.substr(FILENAME_INDEX, METADATA_BUFFER);
 	fileNameWithTrail.erase(remove(fileNameWithTrail.begin(), fileNameWithTrail.end(), '-'), fileNameWithTrail.end());
 	SetFileName(fileNameWithTrail);
-	
-	
 }
 
 
@@ -207,12 +205,12 @@ void FileCreator::ParseMetadataPacket(unsigned char* packetData)
 // PURPOSE		:	Gets the content from data packet and writes to the file
 // PARAMETERS	:	unsigned char* - packetData received
 // RETURNS		:	1 if it was the last packet, 0 if more packets arriving
-int FileCreator::AppendToFile(unsigned char* packetData)
+int FileCreator::AppendToFile(unsigned char* packetData, int lastPacketDataLength)
 {
-	
+
 	const int MAX_PACKET_SIZE = 256;
 	// convert to a C++ string for convenience
-	size_t packetLength = (size_t) MAX_PACKET_SIZE;
+	size_t packetLength = (size_t)MAX_PACKET_SIZE;
 	string packetStr = string(reinterpret_cast<char const*>(packetData), packetLength);
 
 	// set the current packet number
@@ -258,7 +256,7 @@ int FileCreator::AppendToFile(unsigned char* packetData)
 			}
 
 		}
-			
+
 		return 0;
 
 	}
@@ -380,7 +378,7 @@ void FileCreator::ReadCreatedFileContents(void)
 	}
 
 
-	
+
 }
 
 
@@ -451,7 +449,7 @@ void FileCreator::TestErrorDetection(void)
 	string txt1Hash;
 	string txt2Hash;
 
-	
+
 	// create their hashes in 16 bit section only
 	string txt1HashPart = md5(txt1Data);
 	txt1Hash = txt1HashPart.substr(0, 16);
@@ -466,7 +464,7 @@ void FileCreator::TestErrorDetection(void)
 	}
 	else
 	{
-		
+
 		cout << "Verification Test Failed\n";
 		cout << "Test Hash 1:" << txt1Hash << "\n";
 		cout << "Test Hash 2:" << txt2Hash << "\n";

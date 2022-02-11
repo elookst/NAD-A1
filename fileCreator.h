@@ -88,7 +88,7 @@ public:
 
 	// get file data from the data packets
 	// track the packet number achieved or look for EOF indicator
-	int ParseMetadataPacket(unsigned char* packetData);
+	void ParseMetadataPacket(unsigned char* packetData);
 
 	// write to file opened
 	// updates current packet number until max packet number reached
