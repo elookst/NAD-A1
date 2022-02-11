@@ -1,3 +1,9 @@
+// NAME				:	FileCreator.cpp
+// PROJECT			:	Network Application Development A1
+// PROGRAMMER		:   Travis Fiander
+// FIRST-VERSION	:	January 28th, 2022
+
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -8,8 +14,9 @@ using namespace std;
 
 #pragma warning(disable:4996)
 
-// constructor
-// file type is either binary or ASCII
+// Function	   :	FileReader (constructor)
+// Description :	Instantiates a FileReader class, which automatically performs all of the necesary 
+//					file analysis
 FileReader::FileReader(string fileName, string fileType)
 {
 	FileName = fileName;

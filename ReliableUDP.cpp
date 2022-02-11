@@ -4,15 +4,6 @@
 	Author: Glenn Fiedler <gaffer@gaffer.org>
 */
 
-
-/*
-	TO DO:
-	 - cmd args
-	 - get file name from cmd args
-	 - transfer binary data
-	 - construct and send metadata packet
-*/
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -39,7 +30,7 @@ const int ClientPort = 30001;
 const int ProtocolId = 0x11223344;
 const float DeltaTime = 1.0f / 30.0f;
 const float SendRate = 1.0f / 30.0f;
-const float TimeOut = 10.0f;
+const float TimeOut = 1000000.0f;
 const int PacketSize = 256;
 
 class FlowControl
@@ -460,12 +451,6 @@ int main(int argc, char* argv[])
 				// packet in the packetList
 				packetIter++;
 			}
-
-			for (int i = 0; i < sizeof(packet); i++)
-			{
-				printf("%c", packet[i]);
-			}
-			printf("\n");
 
 			connection.SendPacket(packet, sizeof(packet));
 			// iterate through the group of packets after ack

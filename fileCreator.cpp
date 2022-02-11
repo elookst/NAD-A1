@@ -1,6 +1,6 @@
 // NAME				:	FileCreator.cpp
 // PROJECT			:	Network Application Development A1
-// PROGRAMMER		:
+// PROGRAMMER		:   
 // FIRST-VERSION	:
 
 #include <iostream>
@@ -71,7 +71,8 @@ string FileCreator::GetFileName(void)
 void FileCreator::SetFileName(string filename)
 {
 
-	string copy = filename;
+	// string copy = filename;
+	string copy = "C:\\tmp\\newbinary.gif";
 	this->fileName = copy;
 }
 

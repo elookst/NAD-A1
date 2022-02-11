@@ -56,7 +56,7 @@ public:
 
 	// default constructor
 	// leaves everything blank
-	FileCreator();
+	FileCreator(string fileName, string fileType);
 
 	string GetFileName(void);
 
