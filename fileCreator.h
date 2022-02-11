@@ -1,7 +1,8 @@
 // NAME				:	FileCreator.h
 // PROJECT			:	Network Application Development A1
-// PROGRAMMER		:
-// FIRST-VERSION	:
+// PROGRAMMER		:	Erica Luksts
+// FIRST-VERSION	:	February 1, 2022
+
 
 
 #ifndef _FILE_CREATOR_H
@@ -31,8 +32,8 @@ using namespace std;
 
 // CLASS	:	FileCreator
 // PURPOSE	:	This class is used to create and write to a new file that is received from many packets.
-//				Attributes include
-//				Methods include
+//				Attributes include filename, filetype (binary or text), file size, and data variables for writing to files.
+//				Methods included for file writing and reading from packets, verifying files, and calculating transfer time.
 class FileCreator
 {
 
@@ -46,13 +47,12 @@ private:
 	int maxPacketNumber; // ensures all packets received
 
 
-
-
 public:
 
 	char* binaryData; // all data received that was in binary file
 	string createdFileHash;
 	string textData; // all data received that was in a text file
+
 
 	// default constructor
 	// leaves everything blank
@@ -95,11 +95,13 @@ public:
 	int AppendToFile(unsigned char* packetData, int lastPacketDataLength);
 
 
-	int ReadCreatedFileContents(void);
+	void ReadCreatedFileContents(void);
 
 	int VerifyHash(void);
 
 	void DisplayTransferTime(std::chrono::milliseconds time);
+
+	static void TestErrorDetection(void);
 
 };
 
