@@ -14,9 +14,12 @@ using namespace std;
 
 #pragma warning(disable:4996)
 
-// Function	   :	FileReader (constructor)
-// Description :	Instantiates a FileReader class, which automatically performs all of the necesary 
-//					file analysis
+// METHOD		:	FileReader (constructure)
+// PURPOSE		:	instnatiates a FileReader instance, reads the file provided, and sets all the important info.	
+//					It also splits the fileinto packets.
+// PARAMETERS	:	the file name of the file to be read and converted to packets
+//					the type of file (binary or text)
+// RETURNS		:	nothing
 FileReader::FileReader(string fileName, string fileType)
 {
 	FileName = fileName;
@@ -38,7 +41,14 @@ FileReader::FileReader(string fileName, string fileType)
 }
 
 
-// creates metadata or content packets
+// METHOD		:	CreatePacket 
+// PURPOSE		:	creates a new packet with the data provided
+// PARAMETERS	:	- packet type - M or D for metadata or regular data
+//					- the packet number
+//					- the max packet number for the file processed
+//					- the data to be stored in the packet
+//					the type of file (binary or text)
+// RETURNS		:	the constructed packet
 Packet FileReader::CreatePacket(char type, int packetNum, char data[], int maxPacketNum)
 {
 	Packet newPacket;
@@ -51,6 +61,11 @@ Packet FileReader::CreatePacket(char type, int packetNum, char data[], int maxPa
 	return newPacket;
 }
 
+// METHOD		:	Read 
+// PURPOSE		:	reads the file and puts all of the file data in the approprate data structure
+//					depending on whether it's a text file or binary
+// PARAMETERS	:	none
+// RETURNS		:	void
 void FileReader::Read()
 {
 	if (FileType == "-t")
@@ -96,6 +111,10 @@ void FileReader::Read()
 	}
 }
 
+// METHOD		:	SetFileSize 
+// PURPOSE		:	sets the file size
+// PARAMETERS	:	none
+// RETURNS		:	void
 void FileReader::SetFileSize()
 {
 	if (FileType == "-t")
@@ -108,6 +127,10 @@ void FileReader::SetFileSize()
 	}
 }
 
+// METHOD		:	SetMD5hash 
+// PURPOSE		:	gets and sets the MD5 has value for the file contents
+// PARAMETERS	:	none
+// RETURNS		:	void
 void FileReader::SetMD5hash()
 {
 	if (FileType == "-t")
@@ -121,6 +144,11 @@ void FileReader::SetMD5hash()
 	}
 }
 
+// METHOD		:	SplitFileIntoPackets 
+// PURPOSE		:	this function takes the file data, and splits it into individual packets. It filles the packets 
+//					with the appropriate header info as well as the file data. A list of packets is addded to.
+// PARAMETERS	:	none
+// RETURNS		:	void
 void FileReader::SplitFileIntoPackets()
 {
 	if (FileType == "-t")
@@ -214,6 +242,13 @@ void FileReader::SplitFileIntoPackets()
 	}
 }
 
+
+// METHOD		:	CreateMetadataPacket 
+// PURPOSE		:	constructs a metadata packet from the info provided as well as the info already
+//					stored in the class
+// PARAMETERS	:	- int maxPacketNum -- the total number of packets for the file
+//					- char dataType -- the type of data (text or binary)
+// RETURNS		:	void
 void FileReader::CreateMetadataPacket(int maxPacketNum, char dataType) {
 
 	MetaDataPacket mdp;

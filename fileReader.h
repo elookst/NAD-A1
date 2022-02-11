@@ -1,3 +1,8 @@
+// NAME				:	FileCreator.h
+// PROJECT			:	Network Application Development A1
+// PROGRAMMER		:	Travis Fiander
+// FIRST-VERSION	:	February 1, 2022
+
 #ifndef _FILEREADER_H
 #define _FILEREADER_H
 
@@ -19,8 +24,7 @@ const char PACKET_TYPE_DATA = 'D';
 const char PACKET_TYPE_METADATA = 'M';
 const int NULL_CHAR = 1;
 
-// struct for packet creation?
-// then can use the contents to assemble the char[] array according to protocol
+// Data packet structure
 struct Packet
 {
 
@@ -31,6 +35,7 @@ struct Packet
 
 };
 
+// metadata packet structure
 struct MetaDataPacket
 {
 	char packetType; // 0
@@ -42,8 +47,9 @@ struct MetaDataPacket
 };
 
 
-// this class is used to create packets for sending to the receiving client
-
+// CLASS	:	FileReader
+// PURPOSE	:	This class is used to perform all of the functionality related to reading the file to send, 
+//				gathering file info, splitting into packets, and constructing a list of packets to send.
 class FileReader
 {
 

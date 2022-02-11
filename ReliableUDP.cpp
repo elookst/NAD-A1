@@ -239,17 +239,6 @@ int main(int argc, char* argv[])
 	// will be used to write to the file
 	FileCreator fc = FileCreator(file, filetype);
 
-	// make sure to validate fileSize so that the int values for packet numbers aren't more than 7 digits!
-
-	// result value 0 is OK
-	// any other value may mean invalid args and will exit
-
-
-	// include whole file error detection test here
-	// use a sample text and binary file and generate their hashes by the FileReader class and FileCreator class?
-	// compare both starting files and ending files?
-
-
 	// initialize
 
 	if (!InitializeSockets())
