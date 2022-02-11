@@ -14,11 +14,15 @@
 #include <vector>
 #include <chrono>
 
-#define FILE_TYPE_INDEX 2
+#define FILE_TYPE_INDEX 1
 #define FILE_SIZE_BYTE_MAX 8
-#define FILE_SIZE_INDEX 3
-#define HASH_INDEX 11
+#define FILE_SIZE_INDEX 2
+#define HASH_INDEX 10
 #define HASH_LENGTH 16
+#define MAX_PACKET_NUM_INDEX 26
+#define MAX_PACKET_BYTE_MAX 8
+#define FILENAME_INDEX 34
+#define MAX_PACKET_NUM_DATA_INDEX 9
 
 using namespace std;
 
@@ -37,16 +41,18 @@ private:
 	string fileName; // file to write packet contents to
 	string fileType; // text or binary file
 	int fileSize; // file size
-	ofstream fp; // will confirm if needed, will use to write to file
 	string recievedHash; // MD5 hash received from the metadata packet, used to compare
 	int currentPacketNumber; // to track packets received
 	int maxPacketNumber; // ensures all packets received
-	string binaryData; // all data received that was in binary file
-	string textData; // all data received that was in a text file
-	string createdFileHash;
+
+
 
 
 public:
+
+	char* binaryData; // all data received that was in binary file
+	string createdFileHash;
+	string textData; // all data received that was in a text file
 
 	// default constructor
 	// leaves everything blank
@@ -70,15 +76,11 @@ public:
 
 	void SetFileType(const char* fileType);
 
-	void SetFilePtr();
-
 	void SetReceivedHash(string hash);
 
 	void SetBinaryData(char* binaryData);
 
 	string GetBinaryData(void);
-
-	void SetTextData(char* textData);
 
 	string GetTextData(void);
 
@@ -92,14 +94,12 @@ public:
 	// updates current packet number until max packet number reached
 	int AppendToFile(unsigned char* packetData);
 
-	
-	int Close(void);
 
 	int ReadCreatedFileContents(void);
 
 	int VerifyHash(void);
 
-	void DisplayTransferTime(std::chrono::seconds time);
+	void DisplayTransferTime(std::chrono::milliseconds time);
 
 };
 

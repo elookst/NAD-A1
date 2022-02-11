@@ -13,19 +13,20 @@
 
 using namespace std;
 
+
 #pragma warning(disable:4996)
 
 // sets blank filename etc.
 FileCreator::FileCreator()
 {
-	this->fileName = "";
+	this->fileName = "C:\\tmp\\error2.jpg";
+	//this->fileName = "C:\\tmp\\test2.txt";
 	this->fileType = "-t";
 	this->recievedHash = "";
 	this->fileSize = 0;
 	this->currentPacketNumber = 0;
 	this->maxPacketNumber = 1;
 	this->textData = "";
-	this->binaryData = "";
 }
 
 
@@ -65,10 +66,15 @@ string FileCreator::GetFileName(void)
 	return this->fileName;
 }
 
+// *****************************************
 // need to test this
+// temporarily renames the filename so that it can be stored on tested system
 void FileCreator::SetFileName(string filename)
 {
-	this->fileName = filename;
+	
+	string copy = "C:\\tmp\\error2.jpg";
+	//string copy = "C:\\tmp\\test2.txt";
+	this->fileName = copy;
 }
 
 // need to test
@@ -79,9 +85,7 @@ void FileCreator::SetFileType(const char* fileType)
 
 void FileCreator::SetBinaryData(char* binaryData)
 {
-	size_t size = sizeof(binaryData);
-	string binaryStr = string(reinterpret_cast<char const*>(binaryData), size);
-	this->binaryData = binaryStr;
+	this->binaryData = binaryData;
 }
 
 string FileCreator::GetBinaryData(void)
@@ -89,44 +93,12 @@ string FileCreator::GetBinaryData(void)
 	return this->binaryData;
 }
 
-void FileCreator::SetTextData(char* textData)
-{
-	size_t size = sizeof(textData);
-	string textStr = string(reinterpret_cast<char const*>(textData), size);
-	this->textData = textStr;
-}
 
 string FileCreator::GetTextData(void)
 {
 	return this->textData;
 }
 
-// opens the file for writing from pointer
-void FileCreator::SetFilePtr()
-{
-	if (this->fileName != "")
-	{
-		
-		// opens file as text
-		// filename needed to be converted from string to c-style string to open
-		// need to open for read and write to compare hashes later
-		if (this->fileType == "-t")
-		{
-			this->fp.open(this->fileName, ios::in | ios::out );
-		}
-		else
-		{
-			this->fp.open(this->fileName, ios::in | ios::out | ios::binary);
-		}
-
-		if (!this->fp.is_open())
-		{
-			cout << "Unable to open file for writing";
-		}
-		
-		
-	}
-}
 
 
 void FileCreator::SetReceivedHash(string hash)
@@ -139,12 +111,9 @@ void FileCreator::SetReceivedHash(string hash)
 // 
 int FileCreator::ParseMetadataPacket(unsigned char* packetData)
 {
-	
-	// convert to a C++ string for convenience
-	size_t packetLength = sizeof(packetData);
-
+	size_t packetLength = METADATA_BUFFER;
 	string packetStr = string(reinterpret_cast<char const*>(packetData), packetLength);
-
+	
 
 	// set which type of file to write
 	if (packetData[FILE_TYPE_INDEX] == 't')
@@ -159,16 +128,21 @@ int FileCreator::ParseMetadataPacket(unsigned char* packetData)
 	// set file size
 	// get substring from the packet string
 	string fileSize = packetStr.substr(FILE_SIZE_INDEX, FILE_SIZE_BYTE_MAX);
-	SetFileSize(stoi(fileSize));
+	double fFileSize = atof(fileSize.c_str());
 
+	SetFileSize((int)(fFileSize*1000));
 	
 	// set hash
 	SetReceivedHash(packetStr.substr(HASH_INDEX, HASH_LENGTH));
 
-	// set file name
-	SetFileName(packetStr.erase(0, HASH_INDEX + HASH_LENGTH));
+	// set max packet number
+	SetMaxPacketNumber(stoi(packetStr.substr(MAX_PACKET_NUM_INDEX, MAX_PACKET_BYTE_MAX)));
 
-	
+	// set filename
+	// need to remove filler characters
+	string fileNameWithTrail = packetStr.substr(FILENAME_INDEX, METADATA_BUFFER);
+	fileNameWithTrail.erase(remove(fileNameWithTrail.begin(), fileNameWithTrail.end(), '-'), fileNameWithTrail.end());
+	SetFileName(fileNameWithTrail);
 	
 	return 0;
 }
@@ -176,27 +150,67 @@ int FileCreator::ParseMetadataPacket(unsigned char* packetData)
 
 
 // write contents to file that is opened
+// returns 1 if there are no more packets to receive
+// otherwise returns 0
 int FileCreator::AppendToFile(unsigned char* packetData)
 {
 	
 	// convert to a C++ string for convenience
-	size_t packetLength = sizeof(packetData);
+	
+	size_t packetLength = 256;
 
 	string packetStr = string(reinterpret_cast<char const*>(packetData), packetLength);
 
-	// update current packet number
-	SetCurrentPacketNumber(stoi(packetStr.substr(0, 1)));
+	string packetNumber = packetStr.substr(0, MAX_PACKET_BYTE_MAX);
 
-	// set max packet number
-	// set to 10 for now (needs updating to match data packet structure)
-	SetMaxPacketNumber(stoi(packetStr.substr(3, 10)));
+	packetNumber.erase(remove(packetNumber.begin(), packetNumber.end(), '-'), packetNumber.end());
+
+	// update current packet number
+	SetCurrentPacketNumber(stoi(packetNumber));
+	
 
 	// has not reached the last packet
 	if (this->currentPacketNumber != this->maxPacketNumber)
 	{
-		
-		string dataToWrite = packetStr.erase(0, 10);
-		this->fp << (dataToWrite.c_str());
+		string dataToWrite = packetStr.erase(0, 17);
+
+		size_t dataSizeToWrite = DATA_BUFFER;
+
+		if (this->fileType == "-t")
+		{
+
+			fstream fp(GetFileName().c_str(), ios::out | ios::app);
+
+			if (fp.is_open())
+			{
+				fp << (dataToWrite.c_str());
+				fp.close();
+			}
+			else
+			{
+				cout << "Error writing to file.\n";
+			}
+
+		}
+		else
+		{
+
+			fstream fp(GetFileName().c_str(), ios::out | ios::app | ios::binary);
+
+			if (fp.is_open())
+			{
+
+				fp.write(GetFileName().c_str(), dataSizeToWrite);
+				fp.close();
+			}
+			else
+			{
+				cout << "Error writing to file.\n";
+			}
+			
+		}
+			
+
 		return 0;
 
 	}
@@ -204,8 +218,43 @@ int FileCreator::AppendToFile(unsigned char* packetData)
 	// return 1 to indicate to outer loop to exit
 	else
 	{
-		string dataToWrite = packetStr.erase(0, 10);
-		this->fp << (dataToWrite.c_str());
+		string dataToWrite = packetStr.erase(0, 17);
+		size_t dataSizeToWrite = 256 - 17;
+
+		if (this->fileType == "-t")
+		{
+			fstream fp(GetFileName().c_str(), ios::out | ios::app);
+
+			if (fp.is_open())
+			{
+				fp << (dataToWrite.c_str());
+				fp.close();
+			}
+			else
+			{
+				cout << "Error writing to file.\n";
+			}
+		}
+		else
+		{
+			// convert dataToWrite into 
+			fstream fp(GetFileName().c_str(), ios::out | ios::app | ios::binary);
+
+			if (fp.is_open())
+			{
+
+				fp.write(dataToWrite.c_str(), dataSizeToWrite);
+				fp.close();
+			}
+			else
+			{
+				cout << "Error writing to file.\n";
+			}
+
+
+			
+		}
+
 		return 1;
 	}
 
@@ -216,30 +265,31 @@ int FileCreator::AppendToFile(unsigned char* packetData)
 
 // gets all the text or binary file data
 // stores it in string member
+
 int FileCreator::ReadCreatedFileContents()
 {
 	// text file
 	if (this->fileType == "-t")
 	{
 		streampos size;
-		char* textData;
-		ifstream file(this->fileName, ios::ate);
+		char* textRead;
+		ifstream file(GetFileName().c_str(), ios::ate);
 		
 		if (file.is_open())
 		{
 			// get file size before reading
 			size = file.tellg();
-			textData = new char[size];
+			textRead = new char[size];
 
 			// reset position to beginning
 			file.seekg(0, ios::beg);
-			file.read(textData, size);
+			file.read(textRead, size);
 
 			// set text data member
-			SetTextData(textData);
+			this->textData = string(textRead);
 			file.close();
 
-			delete[] textData;
+			delete[] textRead;
 		}
 		else
 		{
@@ -255,10 +305,13 @@ int FileCreator::ReadCreatedFileContents()
 		char* binaryData;
 		
 		// open file, move position to end to get size requirement
-		ifstream file(this->fileName, ios::binary | ios::ate);
+		ifstream file(GetFileName().c_str(), ios::binary | ios::ate);
 		if (file.is_open())
 		{
 			size = file.tellg();
+
+			cout << "File size expected: " << GetFileSize() << "\n";
+			cout << "Bytes received into new file" << size << "\n";
 			binaryData = new char[size];
 
 			// reset position to beginning
@@ -288,11 +341,12 @@ void FileCreator::SetCreatedFileHash(void)
 {
 	if (this->fileType == "-t")
 	{
-		this->createdFileHash = md5(GetTextData());
+		this->createdFileHash = md5(GetTextData()).substr(0, 16);
+		
 	}
 	else
 	{
-		this->createdFileHash = md5(GetBinaryData());
+		this->createdFileHash = md5(GetBinaryData()).substr(0,16);
 	}
 }
 
@@ -300,37 +354,31 @@ void FileCreator::SetCreatedFileHash(void)
 int FileCreator::VerifyHash(void)
 {
 
+	
 	if (this->recievedHash == this->createdFileHash)
 	{
-		cout << "File transfered successfully.";
+		cout << "File transfered successfully.\n";
 		return 0;
 	}
 	else
 	{
-		cout << "File did not transfer successfully - unverified hashes";
+		cout << "File did not transfer successfully - unverified hashes\n";
+		cout << "Received Hash:" << this->recievedHash << "\n";
+		cout << "Created Hash:" << this->createdFileHash << "\n";
 		return -1;
 	}
 
 }
 
 
-void FileCreator::DisplayTransferTime(std::chrono::seconds duration)
+void FileCreator::DisplayTransferTime(std::chrono::milliseconds duration)
 {
 	
-	double transferRate = (double)this->fileSize / duration.count();
+	float transferRate = (float)GetFileSize() / duration.count();
 	
-	cout << "Calculated Transfer Time: " << transferRate / 1000000 << "MBps";
+	cout << "Calculated Transfer Time: " << (transferRate / 1000) << " MBps\n";
 
 
 }
 
-// closes fp
-int FileCreator::Close()
-{
-	if (this->fp.is_open())
-	{
-		fp.close();
-	}
 
-	return 0;
-}

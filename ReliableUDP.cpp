@@ -203,6 +203,10 @@ int main(int argc, char* argv[])
 {
 	string file;
 	string filetype;
+	int doneTransfer = 0;
+	// will be used to write to the file
+	FileCreator fc = FileCreator();
+
 
 	int result = checkArgs(argc, argv);
 
@@ -459,12 +463,6 @@ int main(int argc, char* argv[])
 				packetIter++;
 			}
 
-			// display packet
-			for (int i = 0; i < sizeof(packet); i++)
-			{
-				printf("%c", packet[i]);
-			}
-			printf("\n");
 
 			connection.SendPacket(packet, sizeof(packet));
 			// iterate through the group of packets after ack
@@ -472,28 +470,27 @@ int main(int argc, char* argv[])
 			sendAccumulator -= 1.0f / sendRate;
 		}
 
+
 		// server receiving info here
 		while (true)
 		{
 			unsigned char packet[256];
 			int bytes_read = connection.ReceivePacket(packet, sizeof(packet));
 
-			int doneTransfer = 0;
-
 			if (bytes_read != 0)
 			{
-				//// check if metadata packet
-				//// update the file creator with metadata packet information
-				if (packet[1] == 'M')
+				
+				//cout << packet << "\nEND OF PACKET\n\n";
+				
+				// check if metadata packet
+				// update the file creator with metadata packet information
+				if (packet[0] == 'M')
 				{
 
 					// Sample metadata packet: [packetNum][M][t or b][size][hash - 16][filename] ?
 					// this function will store all the metadata for later
 					// sets filename etc.
 					fc.ParseMetadataPacket(packet);
-
-
-
 
 
 				}
@@ -507,6 +504,19 @@ int main(int argc, char* argv[])
 					doneTransfer = fc.AppendToFile(packet);
 					if (doneTransfer != 0)
 					{
+						// gets stop time from transfer
+						auto stopTime = high_resolution_clock::now();
+
+						auto duration = duration_cast<milliseconds>(stopTime - startTime);
+
+						cout << "Time of transfer: " << duration.count() << "ms\n";
+						
+						// call methods within FileCreator class to validate the file and hash made
+						fc.ReadCreatedFileContents();
+						fc.SetCreatedFileHash();
+						fc.VerifyHash();
+						fc.DisplayTransferTime(duration);
+						
 						break;
 					}
 				}
@@ -516,20 +526,13 @@ int main(int argc, char* argv[])
 				break;
 		}
 
-		// gets stop time from transfer
-		auto stopTime = high_resolution_clock::now();
 
-		auto duration = duration_cast<seconds>(stopTime - startTime);
 
 		// calculate megabits per second for file transfer using file size / duration
 		// display on main page
 
 
-		// call methods within FileCreator class to validate the file and hash made
-		// fc.VerifyHash();
 
-		// close the file created
-		fc.Close();
 
 		// display the duration
 
@@ -558,6 +561,8 @@ int main(int argc, char* argv[])
 
 		statsAccumulator += DeltaTime;
 
+
+
 		while (statsAccumulator >= 0.25f && connection.IsConnected())
 		{
 			float rtt = connection.GetReliabilitySystem().GetRoundTripTime();
@@ -569,10 +574,10 @@ int main(int argc, char* argv[])
 			float sent_bandwidth = connection.GetReliabilitySystem().GetSentBandwidth();
 			float acked_bandwidth = connection.GetReliabilitySystem().GetAckedBandwidth();
 
-			printf("rtt %.1fms, sent %d, acked %d, lost %d (%.1f%%), sent bandwidth = %.1fkbps, acked bandwidth = %.1fkbps\n",
+			/*printf("rtt %.1fms, sent %d, acked %d, lost %d (%.1f%%), sent bandwidth = %.1fkbps, acked bandwidth = %.1fkbps\n",
 				rtt * 1000.0f, sent_packets, acked_packets, lost_packets,
 				sent_packets > 0.0f ? (float)lost_packets / (float)sent_packets * 100.0f : 0.0f,
-				sent_bandwidth, acked_bandwidth);
+				sent_bandwidth, acked_bandwidth);*/
 
 			statsAccumulator -= 0.25f;
 		}
@@ -580,7 +585,12 @@ int main(int argc, char* argv[])
 		net::wait(DeltaTime);
 	}
 
+
+
+
+
 	ShutdownSockets();
 
 	return 0;
+	
 }
