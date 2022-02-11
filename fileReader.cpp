@@ -56,7 +56,7 @@ void FileReader::Read()
 			while (file.get(ch))
 			{
 				AllTextFileData.push_back(ch);
-			
+
 			}
 			file.close();
 		}
@@ -187,6 +187,12 @@ void FileReader::SplitFileIntoPackets()
 				}
 				else
 				{
+					// before we break out of the constuction of the last packet, let's grab the length of
+					// the actual data in the last packet to account for unused buffer space. We dont' want
+					// to write this excess space to the new file
+
+					lastPacketDataLength = j + 1;
+
 					// this prevents the loop from accessing elements beyond the length of the 
 					// vector in the last packet
 					break;

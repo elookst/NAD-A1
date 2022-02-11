@@ -27,7 +27,7 @@ struct Packet
 	int packetNumber; // 0  // starts at 0, max value is maxPacketNumber, helps to remember order of packets
 	char packetType; // 8 // M for metadata and D for content
 	int maxPacketNumber; // 9 // ending packet number of the entire file read
-	char data[DATA_BUFFER + NULL_CHAR]; // 17
+	char data[DATA_BUFFER]; // 17
 
 };
 
@@ -62,6 +62,7 @@ public:
 	string MD5hash;
 	list<Packet> packetList;
 	MetaDataPacket metadataPacket;
+	int lastPacketDataLength;
 
 	FileReader(string fileName, string fileType); // constructor
 	Packet CreatePacket(char type, int packetNum, char data[], int maxPacketNum);

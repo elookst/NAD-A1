@@ -204,9 +204,6 @@ int main(int argc, char* argv[])
 	string file;
 	string filetype;
 	int doneTransfer = 0;
-	// will be used to write to the file
-	FileCreator fc = FileCreator();
-
 
 	int result = checkArgs(argc, argv);
 
@@ -245,6 +242,7 @@ int main(int argc, char* argv[])
 	list<Packet> packetsToSend = fr.packetList;
 	list<Packet>::iterator packetIter = packetsToSend.begin();
 	MetaDataPacket mdPacket = fr.metadataPacket;
+	int lastPacketDataLength = fr.lastPacketDataLength;
 	bool MetaDataPacketSent = false;
 
 	// will be used to write to the file
@@ -463,6 +461,11 @@ int main(int argc, char* argv[])
 				packetIter++;
 			}
 
+			for (int i = 0; i < sizeof(packet); i++)
+			{
+				printf("%c", packet[i]);
+			}
+			printf("\n");
 
 			connection.SendPacket(packet, sizeof(packet));
 			// iterate through the group of packets after ack
@@ -479,9 +482,9 @@ int main(int argc, char* argv[])
 
 			if (bytes_read != 0)
 			{
-				
+
 				//cout << packet << "\nEND OF PACKET\n\n";
-				
+
 				// check if metadata packet
 				// update the file creator with metadata packet information
 				if (packet[0] == 'M')
@@ -501,7 +504,7 @@ int main(int argc, char* argv[])
 					// Sample packet: [packetNum][D][maxPacketNumber][data]
 					// set doneTransfer to 1 if current packet number == last packet
 
-					doneTransfer = fc.AppendToFile(packet);
+					doneTransfer = fc.AppendToFile(packet, lastPacketDataLength);
 					if (doneTransfer != 0)
 					{
 						// gets stop time from transfer
@@ -510,13 +513,13 @@ int main(int argc, char* argv[])
 						auto duration = duration_cast<milliseconds>(stopTime - startTime);
 
 						cout << "Time of transfer: " << duration.count() << "ms\n";
-						
+
 						// call methods within FileCreator class to validate the file and hash made
 						fc.ReadCreatedFileContents();
 						fc.SetCreatedFileHash();
 						fc.VerifyHash();
 						fc.DisplayTransferTime(duration);
-						
+
 						break;
 					}
 				}
@@ -550,7 +553,7 @@ int main(int argc, char* argv[])
 			for (int i = 1; i < ack_count; ++i)
 				printf(",%d", acks[i]);
 			printf("\n");
-		}
+	}
 #endif
 
 		// update connection
@@ -583,7 +586,7 @@ int main(int argc, char* argv[])
 		}
 
 		net::wait(DeltaTime);
-	}
+}
 
 
 
@@ -592,5 +595,5 @@ int main(int argc, char* argv[])
 	ShutdownSockets();
 
 	return 0;
-	
+
 }

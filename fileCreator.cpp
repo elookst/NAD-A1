@@ -71,9 +71,9 @@ string FileCreator::GetFileName(void)
 // temporarily renames the filename so that it can be stored on tested system
 void FileCreator::SetFileName(string filename)
 {
-	
+
 	string copy = "C:\\tmp\\error2.jpg";
-	//string copy = "C:\\tmp\\test2.txt";
+	// string copy = "C:\\tmp\\test2.txt";
 	this->fileName = copy;
 }
 
@@ -113,12 +113,12 @@ int FileCreator::ParseMetadataPacket(unsigned char* packetData)
 {
 	size_t packetLength = METADATA_BUFFER;
 	string packetStr = string(reinterpret_cast<char const*>(packetData), packetLength);
-	
+
 
 	// set which type of file to write
 	if (packetData[FILE_TYPE_INDEX] == 't')
 	{
-		SetFileType("-t"); 
+		SetFileType("-t");
 	}
 	else
 	{
@@ -130,8 +130,8 @@ int FileCreator::ParseMetadataPacket(unsigned char* packetData)
 	string fileSize = packetStr.substr(FILE_SIZE_INDEX, FILE_SIZE_BYTE_MAX);
 	double fFileSize = atof(fileSize.c_str());
 
-	SetFileSize((int)(fFileSize*1000));
-	
+	SetFileSize((int)(fFileSize * 1000));
+
 	// set hash
 	SetReceivedHash(packetStr.substr(HASH_INDEX, HASH_LENGTH));
 
@@ -143,7 +143,7 @@ int FileCreator::ParseMetadataPacket(unsigned char* packetData)
 	string fileNameWithTrail = packetStr.substr(FILENAME_INDEX, METADATA_BUFFER);
 	fileNameWithTrail.erase(remove(fileNameWithTrail.begin(), fileNameWithTrail.end(), '-'), fileNameWithTrail.end());
 	SetFileName(fileNameWithTrail);
-	
+
 	return 0;
 }
 
@@ -152,11 +152,11 @@ int FileCreator::ParseMetadataPacket(unsigned char* packetData)
 // write contents to file that is opened
 // returns 1 if there are no more packets to receive
 // otherwise returns 0
-int FileCreator::AppendToFile(unsigned char* packetData)
+int FileCreator::AppendToFile(unsigned char* packetData, int lastPacketDataLength)
 {
-	
+
 	// convert to a C++ string for convenience
-	
+
 	size_t packetLength = 256;
 
 	string packetStr = string(reinterpret_cast<char const*>(packetData), packetLength);
@@ -167,7 +167,7 @@ int FileCreator::AppendToFile(unsigned char* packetData)
 
 	// update current packet number
 	SetCurrentPacketNumber(stoi(packetNumber));
-	
+
 
 	// has not reached the last packet
 	if (this->currentPacketNumber != this->maxPacketNumber)
@@ -207,9 +207,9 @@ int FileCreator::AppendToFile(unsigned char* packetData)
 			{
 				cout << "Error writing to file.\n";
 			}
-			
+
 		}
-			
+
 
 		return 0;
 
@@ -243,7 +243,7 @@ int FileCreator::AppendToFile(unsigned char* packetData)
 			if (fp.is_open())
 			{
 
-				fp.write(dataToWrite.c_str(), dataSizeToWrite);
+				fp.write(dataToWrite.c_str(), lastPacketDataLength);
 				fp.close();
 			}
 			else
@@ -252,7 +252,7 @@ int FileCreator::AppendToFile(unsigned char* packetData)
 			}
 
 
-			
+
 		}
 
 		return 1;
@@ -260,7 +260,7 @@ int FileCreator::AppendToFile(unsigned char* packetData)
 
 
 
-	
+
 }
 
 // gets all the text or binary file data
@@ -274,10 +274,11 @@ int FileCreator::ReadCreatedFileContents()
 		streampos size;
 		char* textRead;
 		ifstream file(GetFileName().c_str(), ios::ate);
-		
+
 		if (file.is_open())
 		{
 			// get file size before reading
+			file.seekg(0, ios::end);
 			size = file.tellg();
 			textRead = new char[size];
 
@@ -300,10 +301,10 @@ int FileCreator::ReadCreatedFileContents()
 	}
 	else if (this->fileType == "-b")
 	{
-		
+
 		streampos size;
 		char* binaryData;
-		
+
 		// open file, move position to end to get size requirement
 		ifstream file(GetFileName().c_str(), ios::binary | ios::ate);
 		if (file.is_open())
@@ -330,7 +331,7 @@ int FileCreator::ReadCreatedFileContents()
 	}
 
 
-	
+
 	return 0;
 }
 
@@ -342,11 +343,11 @@ void FileCreator::SetCreatedFileHash(void)
 	if (this->fileType == "-t")
 	{
 		this->createdFileHash = md5(GetTextData()).substr(0, 16);
-		
+
 	}
 	else
 	{
-		this->createdFileHash = md5(GetBinaryData()).substr(0,16);
+		this->createdFileHash = md5(GetBinaryData()).substr(0, 16);
 	}
 }
 
@@ -354,7 +355,7 @@ void FileCreator::SetCreatedFileHash(void)
 int FileCreator::VerifyHash(void)
 {
 
-	
+
 	if (this->recievedHash == this->createdFileHash)
 	{
 		cout << "File transfered successfully.\n";
@@ -373,9 +374,9 @@ int FileCreator::VerifyHash(void)
 
 void FileCreator::DisplayTransferTime(std::chrono::milliseconds duration)
 {
-	
+
 	float transferRate = (float)GetFileSize() / duration.count();
-	
+
 	cout << "Calculated Transfer Time: " << (transferRate / 1000) << " MBps\n";
 
 
