@@ -382,3 +382,39 @@ void FileCreator::DisplayTransferTime(std::chrono::milliseconds duration)
 }
 
 
+
+
+void FileCreator::TestErrorDetection(void)
+{
+	string txt1Data = "This is a test string";
+	string txt2Data = "This is a test string";
+
+	string txt1Hash;
+	string txt2Hash;
+
+	
+	// create their hashes in 16 bit section only
+	string txt1HashPart = md5(txt1Data);
+	txt1Hash = txt1HashPart.substr(0, 16);
+	string txt2HashPart = md5(txt2Data);
+	txt2Hash = txt2HashPart.substr(0, 16);
+
+
+	// check if hashes match
+	if (txt1Hash == txt2Hash)
+	{
+		cout << "Test of Verification System Passed\n";
+	}
+	else
+	{
+		
+		cout << "Verification Test Failed\n";
+		cout << "Test Hash 1:" << txt1Hash << "\n";
+		cout << "Test Hash 2:" << txt2Hash << "\n";
+
+	}
+
+
+}
+
+

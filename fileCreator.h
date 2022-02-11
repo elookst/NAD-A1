@@ -46,13 +46,12 @@ private:
 	int maxPacketNumber; // ensures all packets received
 
 
-
-
 public:
 
 	char* binaryData; // all data received that was in binary file
 	string createdFileHash;
 	string textData; // all data received that was in a text file
+
 
 	// default constructor
 	// leaves everything blank
@@ -100,6 +99,8 @@ public:
 	int VerifyHash(void);
 
 	void DisplayTransferTime(std::chrono::milliseconds time);
+
+	static void TestErrorDetection(void);
 
 };
 

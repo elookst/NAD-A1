@@ -189,15 +189,6 @@ int main(int argc, char* argv[])
 
 	int result = checkArgs(argc, argv);
 
-	// make sure to validate fileSize so that the int values for packet numbers aren't more than 7 digits!
-
-	// result value 0 is OK
-	// any other value may mean invalid args and will exit
-
-
-	// include whole file error detection test here
-	// use a sample text and binary file and generate their hashes by the FileReader class and FileCreator class?
-	// compare both starting files and ending files?
 
 
 	enum Mode
@@ -255,6 +246,10 @@ int main(int argc, char* argv[])
 	float statsAccumulator = 0.0f;
 
 	FlowControl flowControl;
+
+	// ******* File Error Detection Test
+	fc.TestErrorDetection();
+
 
 	while (true)
 	{
@@ -446,7 +441,6 @@ int main(int argc, char* argv[])
 			if (bytes_read != 0)
 			{
 				
-				//cout << packet << "\nEND OF PACKET\n\n";
 				
 				// check if metadata packet
 				// update the file creator with metadata packet information
@@ -493,17 +487,6 @@ int main(int argc, char* argv[])
 		}
 
 
-
-		// calculate megabits per second for file transfer using file size / duration
-		// display on main page
-
-
-
-
-		// display the duration
-
-
-
 		// show packets that were acked this frame
 
 #ifdef SHOW_ACKS
@@ -540,10 +523,10 @@ int main(int argc, char* argv[])
 			float sent_bandwidth = connection.GetReliabilitySystem().GetSentBandwidth();
 			float acked_bandwidth = connection.GetReliabilitySystem().GetAckedBandwidth();
 
-			/*printf("rtt %.1fms, sent %d, acked %d, lost %d (%.1f%%), sent bandwidth = %.1fkbps, acked bandwidth = %.1fkbps\n",
+			printf("rtt %.1fms, sent %d, acked %d, lost %d (%.1f%%), sent bandwidth = %.1fkbps, acked bandwidth = %.1fkbps\n",
 				rtt * 1000.0f, sent_packets, acked_packets, lost_packets,
 				sent_packets > 0.0f ? (float)lost_packets / (float)sent_packets * 100.0f : 0.0f,
-				sent_bandwidth, acked_bandwidth);*/
+				sent_bandwidth, acked_bandwidth);
 
 			statsAccumulator -= 0.25f;
 		}
